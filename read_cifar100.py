@@ -1,3 +1,7 @@
+#This code reads cifar-100 dataset and picks the first three
+#Classes for each superclass to enter the training procedure (target data)
+#The other two labels will be used for zero-shot learning.
+
 import pickle
 import random
 
@@ -26,7 +30,7 @@ def separate_target_data(cifar_dict, correspondence_table):
 
         table = correspondence_table[coarse]
         
-        if fine in table[:3]:
+        if fine in table[:3]: #Pick the first three classes for target
             target_data.append(new_entry)
         else:
             not_target_data.append(new_entry)
