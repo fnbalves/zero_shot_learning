@@ -1,6 +1,6 @@
 pickle_files
-
 cifar-100-python
-
 cifar-10-batches-py
-
+en_100_no_stem
+word2vec_dump
+*.pyc
