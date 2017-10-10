@@ -5,6 +5,7 @@ import numpy as np
 import pickle
 import os
 from models import AlexNet
+from batch_making import *
 
 learning_rate = 0.001
 num_epochs = 10
@@ -67,13 +68,12 @@ writer = tf.summary.FileWriter(filewriter_path)
 saver = tf.train.Saver()
 
 # Initalize the data generator seperately for the training and validation set
-train_generator = ImageDataGenerator(train_file,
-                                     horizontal_flip = True, shuffle = True)
-val_generator = ImageDataGenerator(val_file, shuffle = False)
+train_generator = get_batches(train_data)
+val_generator = get_batches(test_data)
 
 # Get the number of training/validation steps per epoch
-train_batches_per_epoch = np.floor(train_generator.data_size / batch_size).astype(np.int16)
-val_batches_per_epoch = np.floor(val_generator.data_size / batch_size).astype(np.int16)
+train_batches_per_epoch = np.floor(size_train / batch_size).astype(np.int16)
+val_batches_per_epoch = np.floor((len_data - size_train) / batch_size).astype(np.int16)
 
 
 # Start Tensorflow session
