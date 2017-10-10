@@ -4,6 +4,7 @@
 
 import pickle
 import random
+from sklearn.preprocessing import LabelBinarizer
 
 random.seed(0)
 
@@ -20,6 +21,7 @@ def separate_target_data(cifar_dict, correspondence_table):
     not_target_data = []
     
     len_data = len(cifar_dict['data'])
+    used_labels = []
     
     for i in range(len_data):
         new_entry = [cifar_dict['data'][i], cifar_dict['fine_labels'][i],
@@ -29,13 +31,14 @@ def separate_target_data(cifar_dict, correspondence_table):
         fine = cifar_dict['fine_labels'][i]
 
         table = correspondence_table[coarse]
+        used_labels  = used_labels + table[:3]
         
         if fine in table[:3]: #Pick the first three classes for target
             target_data.append(new_entry)
         else:
             not_target_data.append(new_entry)
 
-    return {'target': target_data, 'not_target': not_target_data}
+    return {'target': target_data, 'not_target': not_target_data, 'used_labels': used_labels}
 
 def create_dataset_with_string_labels(dataset, metadata_dic):
     new_dataset = []
@@ -77,7 +80,11 @@ if __name__ == '__main__':
 
     target_data = separated_data['target']
     not_target_data = separated_data['not_target']
-
+    used_labels = separated_data['used_labels']
+    used_labels_str = [cifar_meta['fine_label_names'][L] for L in used_labels]
+    vectorizer = LabelBinarizer()
+    vectorizer.fit(used_labels_str)
+    
     print('BUILDING DATASET WITH STR LABELS FOR NEW NORMALIZATION')
     str_target_data = create_dataset_with_string_labels(target_data, cifar_meta)
     str_not_target_data = create_dataset_with_string_labels(not_target_data, cifar_meta)
@@ -85,10 +92,13 @@ if __name__ == '__main__':
     print('SAVING...')
     out_target = open('pickle_files/target_data.pickle', 'wb')
     out_not_target = open('pickle_files/not_target_data.pickle', 'wb')
-
+    out_vectorizer = open('pickle_files/vectorizer.pickle', 'wb')
+    
     pickle.dump(str_target_data, out_target)
     pickle.dump(str_not_target_data, out_not_target)
-
+    pickle.dump(vectorizer, out_vectorizer)
+    
     out_target.close()
     out_not_target.close()
+    out_vectorizer.close()
     print('DONE!')
