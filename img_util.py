@@ -8,7 +8,7 @@ NUM_CHANNELS = 3
 import pickle
 data = pickle.load(open('pickle_files/target_data.pickle', 'rb'))
 
-def array_to_image_matrix(image_array):
+def image_array_to_image_matrix(image_array):
     image_size = int(np.sqrt(np.prod(np.shape(image_array))/NUM_CHANNELS))
     
     image_matrix = image_array.reshape(NUM_CHANNELS, image_size, image_size).transpose(1, 2, 0)
@@ -23,7 +23,7 @@ def image_matrix_to_array(image_matrix):
 def visualize_image(image):
     num_dims = len(np.shape(image))
     if num_dims == 1:
-        image_to_visualize = array_to_image_matrix(image)
+        image_to_visualize = image_array_to_image_matrix(image)
     elif num_dims == 3:
         image_to_visualize = image
     else:
