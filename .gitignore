@@ -5,3 +5,5 @@ en_1000_no_stem
 word2vec_dump
 *.pyc
 *DS_Store
+.idea
+cifar100_history/
