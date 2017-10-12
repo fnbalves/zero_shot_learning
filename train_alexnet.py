@@ -135,8 +135,8 @@ with tf.Session() as sess:
     print("Validation Accuracy = {:.4f}".format(datetime.now(), test_acc))
 
     # Reset the file pointer of the image data generator
-    val_generator.reset_pointer()
-    train_generator.reset_pointer()
+    train_generator = get_batches(train_data, batch_size)
+    val_generator = get_batches(test_data, batch_size)
 
     print("{} Saving checkpoint of model...".format(datetime.now()))
 
