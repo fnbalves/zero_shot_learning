@@ -14,7 +14,7 @@ def image_array_to_image_matrix(image_array):
     image_matrix = image_array.reshape(NUM_CHANNELS, image_size, image_size).transpose(1, 2, 0)
     return image_matrix
 
-def image_matrix_to_array(image_matrix):
+def image_matrix_to_image_array(image_matrix):
     image_size = np.shape(image_matrix)[1]
     
     image_array = image_matrix.transpose(2, 0, 1).reshape(image_size*image_size*NUM_CHANNELS,)
