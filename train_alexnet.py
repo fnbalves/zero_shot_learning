@@ -62,13 +62,8 @@ with tf.name_scope('accuracy'):
 saver = tf.train.Saver()
 
 # Initalize the data generator seperately for the training and validation set
-train_generator = get_batches(train_data, batch_size)
-val_generator = get_batches(test_data, batch_size)
-
-# Get the number of training/validation steps per epoch
-train_batches_per_epoch = np.floor(size_train / batch_size).astype(np.int16)
-val_batches_per_epoch = np.floor((len_data - size_train) / batch_size).astype(np.int16)
-
+train_generator = get_batches(target_train_data, batch_size)
+val_generator = get_batches(target_test_data, batch_size)
 
 # Start Tensorflow session
 with tf.Session() as sess:
@@ -88,26 +83,19 @@ with tf.Session() as sess:
 
     print_in_file("{} Epoch number: {}".format(datetime.now(), epoch+1))
 
-    step = 1
-
-    while step < train_batches_per_epoch:
-
-        # Get a batch of images and labels
-        batch_xs, batch_ys = train_generator.__next__()
+    for batch_xs, batch_ys in train_generator:
 
         # And run the training op
         sess.run(train_op, feed_dict={x: batch_xs,
                                           y: batch_ys,
                                           keep_prob: dropout_rate})
 
-        step += 1
 
     # Validate the model on the entire validation set
     print_in_file("{} Start validation".format(datetime.now()))
     test_acc = 0.
     test_count = 0
-    for _ in range(val_batches_per_epoch):
-        batch_tx, batch_ty = val_generator.__next__()
+    for batch_tx, batch_ty in val_generator:
         acc = sess.run(accuracy, feed_dict={x: batch_tx,
                                                 y: batch_ty,
                                                 keep_prob: 1.})
@@ -117,8 +105,8 @@ with tf.Session() as sess:
     print_in_file("Validation Accuracy = %s %.4f" % (datetime.now(), test_acc))
 
     # Reset the file pointer of the image data generator
-    train_generator = get_batches(train_data, batch_size)
-    val_generator = get_batches(test_data, batch_size)
+    train_generator = get_batches(target_train_data, batch_size)
+    val_generator = get_batches(target_test_data, batch_size)
 
     print_in_file("{} Saving checkpoint of model...".format(datetime.now()))
 
