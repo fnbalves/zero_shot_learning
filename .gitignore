@@ -7,3 +7,4 @@ word2vec_dump
 *DS_Store
 .idea
 cifar100_history/
+checkpoints/
