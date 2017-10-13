@@ -8,7 +8,7 @@ from datetime import datetime
 from models import AlexNet
 from batch_making import *
 
-learning_rate = 0.1
+learning_rate = 0.01
 num_epochs = 30
 batch_size = 400
 
