@@ -76,29 +76,45 @@ if __name__ == '__main__':
 
     print('CORRESPONDENCE DONE')
 
-    separated_data = separate_target_data(cifar_train_dict, corrs_coarse_fine)
-
-    target_data = separated_data['target']
-    not_target_data = separated_data['not_target']
-    used_labels = separated_data['used_labels']
+    separated_train_data = separate_target_data(cifar_train_dict, corrs_coarse_fine)
+    separated_test_data = separate_target_data(cifar_test_dict, corrs_coarse_fine)
+    
+    target_train_data = separated_train_data['target']
+    target_test_data = separated_test_data['target']
+    
+    not_target_train_data = separated_train_data['not_target']
+    not_target_test_data = separated_test_data['not_target']
+    
+    used_labels = separated_train_data['used_labels']
     used_labels_str = [cifar_meta['fine_label_names'][L] for L in used_labels]
     vectorizer = LabelBinarizer()
     vectorizer.fit(used_labels_str)
     
     print('BUILDING DATASET WITH STR LABELS FOR NEW NORMALIZATION')
-    str_target_data = create_dataset_with_string_labels(target_data, cifar_meta)
-    str_not_target_data = create_dataset_with_string_labels(not_target_data, cifar_meta)
+    str_target_train_data = create_dataset_with_string_labels(target_train_data, cifar_meta)
+    str_not_target_train_data = create_dataset_with_string_labels(not_target_train_data, cifar_meta)
 
+    str_target_test_data = create_dataset_with_string_labels(target_test_data, cifar_meta)
+    str_not_target_test_data = create_dataset_with_string_labels(not_target_test_data, cifar_meta)
+    
     print('SAVING...')
-    out_target = open('pickle_files/target_data.pickle', 'wb')
-    out_not_target = open('pickle_files/not_target_data.pickle', 'wb')
+    out_target_train = open('pickle_files/target_train_data.pickle', 'wb')
+    out_target_test = open('pickle_files/target_test_data.pickle', 'wb')
+    out_not_target_train = open('pickle_files/not_target_train_data.pickle', 'wb')
+    out_not_target_test = open('pickle_files/not_target_test_data.pickle', 'wb')
+    
     out_vectorizer = open('pickle_files/vectorizer.pickle', 'wb')
     
-    pickle.dump(str_target_data, out_target)
-    pickle.dump(str_not_target_data, out_not_target)
+    pickle.dump(str_target_train_data, out_target_train)
+    pickle.dump(str_target_test_data, out_target_test)
+    pickle.dump(str_not_target_train_data, out_not_target_train)
+    pickle.dump(str_not_target_test_data, out_not_target_test)
     pickle.dump(vectorizer, out_vectorizer)
     
-    out_target.close()
-    out_not_target.close()
+    out_target_train.close()
+    out_target_test.close()
+    out_not_target_train.close()
+    out_not_target_test.close()
+    
     out_vectorizer.close()
     print('DONE!')
