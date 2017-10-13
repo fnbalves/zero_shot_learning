@@ -49,7 +49,7 @@ def fc(x, num_in, num_out, name, relu=True):
             return relu
         else:
             return act
-    
+
 #Max pooling layer
 def max_pool(x, filter_height, filter_width, stride_y, stride_x,
                 name, padding='SAME', verbose_shapes=False):
@@ -106,7 +106,7 @@ class AlexNet(object):
         # 5th Layer: FC and return unscaled activations
         # (for tf.nn.softmax_cross_entropy_with_logits)
         self.fc5 = fc(dropout4, 192, self.NUM_CLASSES, relu = False, name='fc5')
-        
+
 
     def load_pre_trained_weights(self, session):
         weights_dict = np.load(self.WEIGHTS_PATH, encoding = 'bytes').item()
@@ -121,5 +121,3 @@ class AlexNet(object):
                         else:
                             var = tf.get_variable('weights', trainable=False)
                             session.run(var.assign(data))
-
-        
