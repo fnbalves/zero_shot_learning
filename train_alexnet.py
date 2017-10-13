@@ -8,7 +8,7 @@ from datetime import datetime
 from models import AlexNet
 from batch_making import *
 
-learning_rate = 0.001
+learning_rate = 0.1
 num_epochs = 30
 batch_size = 128
 
@@ -54,25 +54,9 @@ with tf.name_scope('train'):
     optimizer = tf.train.GradientDescentOptimizer(learning_rate)
     train_op = optimizer.apply_gradients(grads_and_vars=gradients)
 
-for gradient, var in gradients:
-    tf.summary.histogram(var.name + '/gradient', gradient)
-
-for var in var_list:
-    tf.summary.histogram(var.name, var)
-
-tf.summary.scalar('cross_entropy', loss)
-
 with tf.name_scope('accuracy'):
     correct_pred = tf.equal(tf.argmax(score, 1), tf.argmax(y, 1))
     accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
-
-tf.summary.scalar('accuracy', accuracy)
-
-# Merge all summaries together
-merged_summary = tf.summary.merge_all()
-
-# Initialize the FileWriter
-writer = tf.summary.FileWriter(filewriter_path)
 
 # Initialize an saver for store model checkpoints
 saver = tf.train.Saver()
@@ -92,11 +76,8 @@ with tf.Session() as sess:
   # Initialize all variables
   sess.run(tf.global_variables_initializer())
 
-  # Add the model graph to TensorBoard
-  writer.add_graph(sess.graph)
-
   # Load the pretrained weights into the non-trainable layer
-  #model.load_initial_weights(sess)
+  #saver.restore(sess, filename)
 
   print_in_file("{} Start training...".format(datetime.now()))
   print_in_file("{} Open Tensorboard at --logdir {}".format(datetime.now(),
@@ -118,13 +99,6 @@ with tf.Session() as sess:
         sess.run(train_op, feed_dict={x: batch_xs,
                                           y: batch_ys,
                                           keep_prob: dropout_rate})
-
-        # Generate summary with the current batch of data and write to file
-        if step%display_step == 0:
-            s = sess.run(merged_summary, feed_dict={x: batch_xs,
-                                                        y: batch_ys,
-                                                        keep_prob: 1.})
-            writer.add_summary(s, epoch*train_batches_per_epoch + step)
 
         step += 1
 
