@@ -12,13 +12,10 @@ NUM_CHANNELS = 3
 IMAGE_SIZE = 24
 
 print('LOADING DATA')
-target_data = pickle.load(open('pickle_files/target_data.pickle', 'rb'))
-len_data = len(target_data)
-size_train = int(2.0*len_data/3.0)
-random.shuffle(target_data)
+target_train_data = pickle.load(open('pickle_files/target_train_data.pickle', 'rb'))
+target_test_data = pickle.load(open('pickle_files/target_test_data.pickle', 'rb'))
 
-train_data = target_data[:size_train]
-test_data = target_data[size_train:]
+random.shuffle(target_train_data)
 
 vectorizer = pickle.load(open('pickle_files/vectorizer.pickle', 'rb'))
 print('DATA LOADED')
