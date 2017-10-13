@@ -4,6 +4,7 @@ import numpy as np
 import pickle
 import math
 import random
+import tensorflow as tf
 
 random.seed(0)
 np.random.seed(0)
@@ -23,7 +24,8 @@ print('DATA LOADED')
 def adjust_data(image_array):
     image_matrix = image_array_to_image_matrix(image_array)
     big_image = resize_image_matrix(image_matrix, IMAGE_SIZE, IMAGE_SIZE)
-    return big_image
+    normalized_image = tf.image.per_image_standardization(big_image)
+    return normalized_image
 
 def get_batches(data, size_batch):
     len_data = len(data)
