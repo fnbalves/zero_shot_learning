@@ -34,6 +34,7 @@ model = AlexNet(x, keep_prob, num_classes, train_layers)
 score = model.fc8
 
 var_list = [v for v in tf.trainable_variables() if v.name.split('/')[0] in train_layers]
+print('VAR LIST', var_list)
 
 with tf.name_scope("cross_ent"):
     loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
@@ -132,7 +133,7 @@ with tf.Session() as sess:
         test_acc += acc
         test_count += 1
     test_acc /= test_count
-    print("Validation Accuracy = {:.4f}".format(datetime.now(), test_acc))
+    print("Validation Accuracy = {} %.4f}".format(datetime.now(), test_acc))
 
     # Reset the file pointer of the image data generator
     train_generator = get_batches(train_data, batch_size)
