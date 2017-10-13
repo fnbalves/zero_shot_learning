@@ -10,7 +10,7 @@ from batch_making import *
 
 learning_rate = 0.1
 num_epochs = 30
-batch_size = 128
+batch_size = 400
 
 dropout_rate = 0.5
 num_classes = 60
@@ -77,7 +77,7 @@ with tf.Session() as sess:
   sess.run(tf.global_variables_initializer())
 
   # Load the pretrained weights into the non-trainable layer
-  #saver.restore(sess, filename)
+  saver.restore(sess, 'model_epoch0.ckpt')
 
   print_in_file("{} Start training...".format(datetime.now()))
   print_in_file("{} Open Tensorboard at --logdir {}".format(datetime.now(),
