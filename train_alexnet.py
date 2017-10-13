@@ -9,8 +9,8 @@ from models import AlexNet
 from batch_making import *
 
 learning_rate = 0.001
-num_epochs = 10
-batch_size = 50
+num_epochs = 30
+batch_size = 128
 
 dropout_rate = 0.5
 num_classes = 60
@@ -38,7 +38,7 @@ var_list = [v for v in tf.trainable_variables() if v.name.split('/')[0] in train
 OUTPUT_FILE_NAME = 'train_output.txt'
 
 def print_in_file(string):
-    output_file = open(OUTPUT_FILE_NAME, 'w')
+    output_file = open(OUTPUT_FILE_NAME, 'a')
     output_file.write(string)
     output_file.close()
 
