@@ -39,7 +39,8 @@ OUTPUT_FILE_NAME = 'train_output.txt'
 
 def print_in_file(string):
     output_file = open(OUTPUT_FILE_NAME, 'a')
-    output_file.write(string)
+    output_file.write(string + '\n')
+    print(string)
     output_file.close()
 
 with tf.name_scope("cross_ent"):
