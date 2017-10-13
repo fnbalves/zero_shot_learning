@@ -34,7 +34,13 @@ model = AlexNet(x, keep_prob, num_classes, train_layers)
 score = model.fc8
 
 var_list = [v for v in tf.trainable_variables() if v.name.split('/')[0] in train_layers]
-print('VAR LIST', var_list)
+
+OUTPUT_FILE_NAME = 'train_output.txt'
+
+def print_in_file(string):
+    output_file = open(OUTPUT_FILE_NAME, 'w')
+    output_file.write(string)
+    output_file.close()
 
 with tf.name_scope("cross_ent"):
     loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
@@ -91,14 +97,14 @@ with tf.Session() as sess:
   # Load the pretrained weights into the non-trainable layer
   #model.load_initial_weights(sess)
 
-  print("{} Start training...".format(datetime.now()))
-  print("{} Open Tensorboard at --logdir {}".format(datetime.now(),
+  print_in_file("{} Start training...".format(datetime.now()))
+  print_in_file("{} Open Tensorboard at --logdir {}".format(datetime.now(),
                                                     filewriter_path))
 
   # Loop over number of epochs
   for epoch in range(num_epochs):
 
-    print("{} Epoch number: {}".format(datetime.now(), epoch+1))
+    print_in_file("{} Epoch number: {}".format(datetime.now(), epoch+1))
 
     step = 1
 
@@ -122,7 +128,7 @@ with tf.Session() as sess:
         step += 1
 
     # Validate the model on the entire validation set
-    print("{} Start validation".format(datetime.now()))
+    print_in_file("{} Start validation".format(datetime.now()))
     test_acc = 0.
     test_count = 0
     for _ in range(val_batches_per_epoch):
@@ -133,16 +139,16 @@ with tf.Session() as sess:
         test_acc += acc
         test_count += 1
     test_acc /= test_count
-    print("Validation Accuracy = %s %.4f" % (datetime.now(), test_acc))
+    print_in_file("Validation Accuracy = %s %.4f" % (datetime.now(), test_acc))
 
     # Reset the file pointer of the image data generator
     train_generator = get_batches(train_data, batch_size)
     val_generator = get_batches(test_data, batch_size)
 
-    print("{} Saving checkpoint of model...".format(datetime.now()))
+    print_in_file("{} Saving checkpoint of model...".format(datetime.now()))
 
     #save checkpoint of the model
     checkpoint_name = os.path.join(checkpoint_path, 'model_epoch'+str(epoch)+'.ckpt')
     save_path = saver.save(sess, checkpoint_name)
 
-    print("{} Model checkpoint saved at {}".format(datetime.now(), checkpoint_name))
+    print_in_file("{} Model checkpoint saved at {}".format(datetime.now(), checkpoint_name))
