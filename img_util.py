@@ -4,10 +4,6 @@ import scipy.misc
 
 NUM_CHANNELS = 3
 
-#TEMPORARY
-import pickle
-data = pickle.load(open('pickle_files/target_data.pickle', 'rb'))
-
 def image_array_to_image_matrix(image_array):
     image_size = int(np.sqrt(np.prod(np.shape(image_array))/NUM_CHANNELS))
     
