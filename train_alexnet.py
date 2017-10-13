@@ -133,7 +133,7 @@ with tf.Session() as sess:
         test_acc += acc
         test_count += 1
     test_acc /= test_count
-    print("Validation Accuracy = %s %.4f".format(datetime.now(), test_acc))
+    print("Validation Accuracy = %s %.4f" % (datetime.now(), test_acc))
 
     # Reset the file pointer of the image data generator
     train_generator = get_batches(train_data, batch_size)
