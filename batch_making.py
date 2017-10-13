@@ -9,7 +9,7 @@ random.seed(0)
 np.random.seed(0)
 
 NUM_CHANNELS = 3
-IMAGE_SIZE = 227
+IMAGE_SIZE = 24
 
 print('LOADING DATA')
 target_data = pickle.load(open('pickle_files/target_data.pickle', 'rb'))

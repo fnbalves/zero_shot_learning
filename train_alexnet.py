@@ -21,7 +21,7 @@ display_step = 1
 filewriter_path = 'cifar100_history/'
 checkpoint_path = 'checkpoints/'
 
-IMAGE_SIZE = 227
+IMAGE_SIZE = 24
 
 if not os.path.isdir(filewriter_path): os.mkdir(filewriter_path)
 if not os.path.isdir(checkpoint_path): os.mkdir(checkpoint_path)
@@ -31,7 +31,7 @@ y = tf.placeholder(tf.float32, [None, num_classes])
 keep_prob = tf.placeholder(tf.float32)
 
 model = AlexNet(x, keep_prob, num_classes, train_layers)
-score = model.fc8
+score = model.fc5
 
 var_list = [v for v in tf.trainable_variables() if v.name.split('/')[0] in train_layers]
 
@@ -77,7 +77,7 @@ with tf.Session() as sess:
   sess.run(tf.global_variables_initializer())
 
   # Load the pretrained weights into the non-trainable layer
-  saver.restore(sess, 'model_epoch0.ckpt')
+  #saver.restore(sess, 'model_epoch0.ckpt')
 
   print_in_file("{} Start training...".format(datetime.now()))
   print_in_file("{} Open Tensorboard at --logdir {}".format(datetime.now(),
