@@ -9,6 +9,7 @@ from models import AlexNet
 from batch_making import *
 
 learning_rate = 0.01
+momentum = 0.9
 num_epochs = 30
 batch_size = 400
 
@@ -51,7 +52,7 @@ with tf.name_scope('train'):
     gradients = tf.gradients(loss, var_list)
     gradients = list(zip(gradients, var_list))
 
-    optimizer = tf.train.GradientDescentOptimizer(learning_rate)
+    optimizer = tf.train.MomentumOptimizer(learning_rate, momentum)
     train_op = optimizer.apply_gradients(grads_and_vars=gradients)
 
 with tf.name_scope('accuracy'):
