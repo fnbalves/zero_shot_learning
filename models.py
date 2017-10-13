@@ -19,8 +19,8 @@ def conv(x, filter_height, filter_width, num_filters, stride_y, stride_x, name,
                                           padding = padding)
 
     with tf.variable_scope(name) as scope:
-        weights = tf.get_variable('weights', shape = [filter_height, filter_width, input_channels/groups, num_filters])
-        biases = tf.get_variable('biases',shape=[num_filters])
+        weights = tf.get_variable('weights', shape = [filter_height, filter_width, input_channels/groups, num_filters], trainable=True)
+        biases = tf.get_variable('biases',shape=[num_filters], trainable=True)
 
         if groups == 1:
             conv = convolve(x, weights)
@@ -82,9 +82,6 @@ class AlexNet(object):
         self.IS_TRAINING = False
         self.WEIGHTS_PATH = pre_trained_path
         self.create()
-        
-    def load_initial_weights(self):
-        pass
 
     def create(self):
         # 1st Layer: Conv (w ReLu) -> Lrn -> Pool
