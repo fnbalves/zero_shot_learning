@@ -24,8 +24,7 @@ print('DATA LOADED')
 def adjust_data(image_array):
     image_matrix = image_array_to_image_matrix(image_array)
     big_image = resize_image_matrix(image_matrix, IMAGE_SIZE, IMAGE_SIZE)
-    normalized_image = tf.image.per_image_standardization(big_image)
-    return normalized_image
+    return big_image
 
 def get_batches(data, size_batch):
     len_data = len(data)

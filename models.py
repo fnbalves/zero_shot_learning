@@ -69,6 +69,9 @@ def lrn(x, radius, alpha, beta, name, bias=1.0, verbose_shapes=False):
                                                   alpha = alpha, beta = beta,
                                                   bias = bias, name = name)
 
+def normalize_images(x):
+    return tf.map_fn(lambda frame: tf.image.per_image_standardization(frame), x)
+    
 #Dropout layer
 def dropout(x, keep_prob):
     return tf.nn.dropout(x, keep_prob)
@@ -85,7 +88,8 @@ class AlexNet(object):
 
     def create(self):
         # 1st Layer: Conv (w ReLu) -> Lrn -> Pool
-        conv1 = conv(self.X, 5, 5, 64, 1, 1, padding = 'VALID', name = 'conv1')
+        normalized_images = normalize_images(self.X)
+        conv1 = conv(normalized_images, 5, 5, 64, 1, 1, padding = 'VALID', name = 'conv1')
         norm1 = lrn(conv1, 2, 2e-05, 0.75, name = 'norm1')
         pool1 = max_pool(norm1, 3, 3, 2, 2, padding = 'VALID', name = 'pool1')
 
