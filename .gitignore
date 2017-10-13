@@ -8,3 +8,4 @@ word2vec_dump
 .idea
 cifar100_history/
 checkpoints/
+train_output.txt
