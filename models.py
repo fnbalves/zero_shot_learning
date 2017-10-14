@@ -77,13 +77,9 @@ def dropout(x, keep_prob):
     return tf.nn.dropout(x, keep_prob)
 
 class AlexNet(object):
-    def __init__(self, x, keep_prob, num_classes, skip_layer, pre_trained_path=None):
+    def __init__(self, x, num_classes):
         self.X = x
         self.NUM_CLASSES = num_classes
-        self.KEEP_PROB = keep_prob
-        self.SKIP_LAYER = skip_layer
-        self.IS_TRAINING = False
-        self.WEIGHTS_PATH = pre_trained_path
         self.create()
 
     def create(self):
@@ -101,27 +97,10 @@ class AlexNet(object):
         # 3th Layer: Flatten -> FC (w ReLu) -> Dropout
         flattened = tf.reshape(pool2, [-1, 4*4*64])
         fc3 = fc(flattened, 4*4*64, 384, name='fc3')
-        #dropout3 = dropout(fc3, self.KEEP_PROB)
-
+        
         # 4th Layer: FC (w ReLu) -> Dropout
         fc4 = fc(fc3, 384, 192, name = 'fc4')
-        #dropout4 = dropout(fc4, self.KEEP_PROB)
-
+        
         # 5th Layer: FC and return unscaled activations
         # (for tf.nn.softmax_cross_entropy_with_logits)
         self.fc5 = fc(fc4, 192, self.NUM_CLASSES, relu = False, name='fc5')
-
-
-    def load_pre_trained_weights(self, session):
-        weights_dict = np.load(self.WEIGHTS_PATH, encoding = 'bytes').item()
-
-        for op_name in weights_dict:
-            if op_name not in self.SKIP_LAYER:
-                with tf.variable_scope(op_name, reuse=True):
-                    for data in weights_dict[op_name]:
-                        if len(data.shape) == 1:
-                            var = tf.get_variable('biases', trainable=False)
-                            session.run(var.assign(data))
-                        else:
-                            var = tf.get_variable('weights', trainable=False)
-                            session.run(var.assign(data))
