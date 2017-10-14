@@ -23,6 +23,10 @@ filewriter_path = 'cifar100_history/'
 checkpoint_path = 'checkpoints/'
 
 IMAGE_SIZE = 24
+OUTPUT_FILE_NAME = 'train_output.txt'
+
+decay_steps = int(len(target_train_data)/batch_size)
+learning_rate_decay_factor = 0.95
 
 if not os.path.isdir(filewriter_path): os.mkdir(filewriter_path)
 if not os.path.isdir(checkpoint_path): os.mkdir(checkpoint_path)
@@ -35,15 +39,8 @@ score = model.fc5
 
 var_list = [v for v in tf.trainable_variables() if v.name.split('/')[0] in train_layers]
 
-OUTPUT_FILE_NAME = 'train_output.txt'
-
-decay_steps = int(len(target_train_data)/batch_size)
-learning_rate_decay_factor = 0.95
-
 def distort_image(image):
-      IMAGE_SIZE = 24
-      
-      distorted_image = tf.random_crop(image, [24, 24, 3])
+      distorted_image = tf.random_crop(image, [IMAGE_SIZE, IMAGE_SIZE, 3])
       distorted_image = tf.image.random_flip_left_right(distorted_image)
       distorted_image = tf.image.random_brightness(distorted_image,
                                                max_delta=63)
@@ -90,8 +87,8 @@ with tf.name_scope('accuracy'):
 saver = tf.train.Saver()
 
 # Initalize the data generator seperately for the training and validation set
-train_generator = get_batches(target_train_data, batch_size)
-val_generator = get_batches(target_test_data, batch_size)
+train_generator = get_batches(target_train_data, batch_size, IMAGE_SIZE)
+val_generator = get_batches(target_test_data, batch_size, IMAGE_SIZE)
 
 # Start Tensorflow session
 with tf.Session() as sess:
@@ -133,8 +130,8 @@ with tf.Session() as sess:
     print_in_file("Validation Accuracy = %s %.4f" % (datetime.now(), test_acc))
 
     # Reset the file pointer of the image data generator
-    train_generator = get_batches(target_train_data, batch_size)
-    val_generator = get_batches(target_test_data, batch_size)
+    train_generator = get_batches(target_train_data, batch_size, IMAGE_SIZE)
+    val_generator = get_batches(target_test_data, batch_size, IMAGE_SIZE)
 
     print_in_file("{} Saving checkpoint of model...".format(datetime.now()))
 
