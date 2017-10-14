@@ -11,7 +11,7 @@ from batch_making import *
 learning_rate = 0.01
 momentum = 0.9
 num_epochs = 30
-batch_size = 400
+batch_size = 128
 
 dropout_rate = 0.5
 num_classes = 60
@@ -64,7 +64,7 @@ def print_in_file(string):
     output_file.close()
 
 with tf.name_scope("cross_ent"):
-    loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
+    loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(
                                             logits = score, labels = y))
 
 with tf.name_scope('train'):
