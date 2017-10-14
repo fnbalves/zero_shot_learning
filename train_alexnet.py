@@ -38,6 +38,25 @@ var_list = [v for v in tf.trainable_variables() if v.name.split('/')[0] in train
 
 OUTPUT_FILE_NAME = 'train_output.txt'
 
+
+def distort_image(image):
+      IMAGE_SIZE = 24
+      
+      distorted_image = tf.random_crop(image, [24, 24, 3])
+      distorted_image = tf.image.random_flip_left_right(distorted_image)
+      distorted_image = tf.image.random_brightness(distorted_image,
+                                               max_delta=63)
+      distorted_image = tf.image.random_contrast(distorted_image,
+                                             lower=0.2, upper=1.8)
+      float_image = tf.image.per_image_standardization(distorted_image)
+      return float_image
+
+def distorted_batch(batch):
+    return tf.map_fn(lambda frame: distort_image(frame), batch)
+
+initial_x_batch = tf.placeholder(tf.float32, [batch_size, IMAGE_SIZE, IMAGE_SIZE, 3])
+dist_x_batch = distorted_batch(initial_x_batch)
+
 def print_in_file(string):
     output_file = open(OUTPUT_FILE_NAME, 'a')
     output_file.write(string + '\n')
@@ -87,7 +106,9 @@ with tf.Session() as sess:
     for batch_xs, batch_ys in train_generator:
 
         # And run the training op
-        sess.run(train_op, feed_dict={x: batch_xs,
+        new_batch = sess.run(dist_x_batch, feed_dict={initial_x_batch: batch_xs})
+        
+        sess.run(train_op, feed_dict={x: new_batch,
                                           y: batch_ys,
                                           keep_prob: dropout_rate})
 
