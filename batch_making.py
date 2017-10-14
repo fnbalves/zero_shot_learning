@@ -27,7 +27,7 @@ def adjust_data(image_array):
 def get_batches(data, size_batch):
     random.shuffle(target_train_data)
     len_data = len(data)
-    num_batches = math.ceil(len_data/size_batch)
+    num_batches = math.floor(len_data/size_batch)
     for i in range(num_batches):
         new_batch = data[i*size_batch:min(len_data, (i+1)*size_batch)]
         Xs = [adjust_data(b[0]) for b in new_batch]
