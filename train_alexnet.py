@@ -38,7 +38,7 @@ var_list = [v for v in tf.trainable_variables() if v.name.split('/')[0] in train
 OUTPUT_FILE_NAME = 'train_output.txt'
 
 decay_steps = int(len(target_train_data)/batch_size)
-learning_rate_decay_factor = 0.1
+learning_rate_decay_factor = 0.95
 
 def distort_image(image):
       IMAGE_SIZE = 24
