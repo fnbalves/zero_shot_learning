@@ -101,15 +101,15 @@ class AlexNet(object):
         # 3th Layer: Flatten -> FC (w ReLu) -> Dropout
         flattened = tf.reshape(pool2, [-1, 4*4*64])
         fc3 = fc(flattened, 4*4*64, 384, name='fc3')
-        dropout3 = dropout(fc3, self.KEEP_PROB)
+        #dropout3 = dropout(fc3, self.KEEP_PROB)
 
         # 4th Layer: FC (w ReLu) -> Dropout
-        fc4 = fc(dropout3, 384, 192, name = 'fc4')
-        dropout4 = dropout(fc4, self.KEEP_PROB)
+        fc4 = fc(fc3, 384, 192, name = 'fc4')
+        #dropout4 = dropout(fc4, self.KEEP_PROB)
 
         # 5th Layer: FC and return unscaled activations
         # (for tf.nn.softmax_cross_entropy_with_logits)
-        self.fc5 = fc(dropout4, 192, self.NUM_CLASSES, relu = False, name='fc5')
+        self.fc5 = fc(fc4, 192, self.NUM_CLASSES, relu = False, name='fc5')
 
 
     def load_pre_trained_weights(self, session):
