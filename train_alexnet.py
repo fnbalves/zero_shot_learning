@@ -10,12 +10,12 @@ from batch_making import *
 
 initial_learning_rate = 0.1
 momentum = 0.9
-num_epochs = 30
+num_epochs = 300
 batch_size = 128
 
 dropout_rate = 0.5
 num_classes = 60
-train_layers = ['conv1', 'conv2', 'conv3', 'conv4', 'conv5', 'fc6', 'fc7', 'fc8']
+train_layers = ['conv1', 'conv2', 'fc3', 'fc4', 'fc5']
 
 display_step = 1
 
@@ -29,9 +29,8 @@ if not os.path.isdir(checkpoint_path): os.mkdir(checkpoint_path)
 
 x = tf.placeholder(tf.float32, [batch_size, IMAGE_SIZE, IMAGE_SIZE, 3])
 y = tf.placeholder(tf.float32, [None, num_classes])
-keep_prob = tf.placeholder(tf.float32)
 
-model = AlexNet(x, keep_prob, num_classes, train_layers)
+model = AlexNet(x, num_classes)
 score = model.fc5
 
 var_list = [v for v in tf.trainable_variables() if v.name.split('/')[0] in train_layers]
@@ -118,8 +117,7 @@ with tf.Session() as sess:
         new_batch = sess.run(dist_x_batch, feed_dict={initial_x_batch: batch_xs})
         
         sess.run(train_op, feed_dict={x: new_batch,
-                                          y: batch_ys,
-                                          keep_prob: dropout_rate})
+                                          y: batch_ys})
 
 
     # Validate the model on the entire validation set
@@ -128,8 +126,7 @@ with tf.Session() as sess:
     test_count = 0
     for batch_tx, batch_ty in val_generator:
         acc = sess.run(accuracy, feed_dict={x: batch_tx,
-                                                y: batch_ty,
-                                                keep_prob: 1.})
+                                                y: batch_ty})
         test_acc += acc
         test_count += 1
     test_acc /= test_count
