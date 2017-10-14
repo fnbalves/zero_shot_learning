@@ -16,8 +16,6 @@ print('LOADING DATA')
 target_train_data = pickle.load(open('pickle_files/target_train_data.pickle', 'rb'))
 target_test_data = pickle.load(open('pickle_files/target_test_data.pickle', 'rb'))
 
-random.shuffle(target_train_data)
-
 vectorizer = pickle.load(open('pickle_files/vectorizer.pickle', 'rb'))
 print('DATA LOADED')
 
@@ -27,6 +25,7 @@ def adjust_data(image_array):
     return big_image
 
 def get_batches(data, size_batch):
+    random.shuffle(target_train_data)
     len_data = len(data)
     num_batches = math.ceil(len_data/size_batch)
     for i in range(num_batches):
