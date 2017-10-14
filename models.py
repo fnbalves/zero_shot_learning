@@ -104,3 +104,42 @@ class AlexNet(object):
         # 5th Layer: FC and return unscaled activations
         # (for tf.nn.softmax_cross_entropy_with_logits)
         self.fc5 = fc(fc4, 192, self.NUM_CLASSES, relu = False, name='fc5')
+
+class VGG11(object):
+    def __init__(self, x, keep_prob, num_classes):
+        self.X = x
+        self.KEEP_PROB = keep_prob
+        self.NUM_CLASSES = num_classes
+        self.create()
+
+    def create(self):
+        normalized_images = normalize_images(self.X)
+
+        #1st Layer: Conv (w ReLu) -> Pool
+        conv1 = conv(normalized_images, 3, 3, 64, 1, 1, padding = 'VALID', name = 'conv1')
+        pool1 = max_pool(conv1, 2, 2, 2, 2, padding = 'VALID', name = 'pool1')
+        
+        #2nd Layer: Conv (w ReLu) -> Pool
+        conv2 = conv(pool1, 3, 3, 128, 1, 1, padding = 'VALID', name = 'conv2')
+        pool2 = max_pool(conv2, 2, 2, 2, 2, padding = 'VALID', name = 'pool2')
+
+        #3rd Layer: Conv (w ReLu) -> Conv (w ReLu) -> Pool
+        conv3 = conv(pool2, 3, 3, 256, 1, 1, padding = 'VALID', name = 'conv3')
+        conv4 = conv(conv3, 3, 3, 256, 1, 1, padding = 'VALID', name = 'conv4')
+        pool3 = max_pool(conv4, 2, 2, 2, 2, padding = 'VALID', name = 'pool3')
+
+        #4th Layer: Conv (w ReLu) -> Conv (w ReLu) -> Pool
+        conv5 = conv(pool3, 3, 3, 512, 1, 1, padding = 'VALID', name = 'conv5')
+        conv6 = conv(conv5, 3, 3, 512, 1, 1, padding = 'VALID', name = 'conv6')
+        pool4 = max_pool(conv6, 2, 2, 2, 2, padding = 'VALID', name = 'pool4')
+
+        num_elems = int(np.prod(pool4.get_shape()[1:]))
+        
+        #5th Layer: Full connecteds
+        flattened = tf.reshape(pool4, [-1, num_elems])
+        fc7 = fc(flattened, num_elems, 4096, name='fc7')
+        dropout8 = dropout(fc7, self.KEEP_PROB)
+        fc8 = fc(dropout8, 4096, 4096, name='fc8')
+        dropout9 = dropout(fc8, self.KEEP_PROB)
+
+        self.fc9 = fc(dropout9, 4096, self.NUM_CLASSES, relu = False, name = 'fc9')
