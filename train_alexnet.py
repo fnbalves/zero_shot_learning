@@ -8,7 +8,7 @@ from datetime import datetime
 from models import AlexNet
 from batch_making import *
 
-learning_rate = 0.01
+initial_learning_rate = 0.1
 momentum = 0.9
 num_epochs = 30
 batch_size = 128
@@ -38,6 +38,8 @@ var_list = [v for v in tf.trainable_variables() if v.name.split('/')[0] in train
 
 OUTPUT_FILE_NAME = 'train_output.txt'
 
+decay_steps = int(len(target_train_data)/batch_size)
+learning_rate_decay_factor = 0.1
 
 def distort_image(image):
       IMAGE_SIZE = 24
@@ -70,9 +72,16 @@ with tf.name_scope("cross_ent"):
 with tf.name_scope('train'):
     gradients = tf.gradients(loss, var_list)
     gradients = list(zip(gradients, var_list))
+    global_step = tf.Variable(0)
+    
+    learning_rate = lr = tf.train.exponential_decay(initial_learning_rate,
+                                  global_step,
+                                  decay_steps,
+                                  learning_rate_decay_factor,
+                                  staircase=True)
 
     optimizer = tf.train.MomentumOptimizer(learning_rate, momentum)
-    train_op = optimizer.apply_gradients(grads_and_vars=gradients)
+    train_op = optimizer.apply_gradients(grads_and_vars=gradients, global_step=global_step)
 
 with tf.name_scope('accuracy'):
     correct_pred = tf.equal(tf.argmax(score, 1), tf.argmax(y, 1))
