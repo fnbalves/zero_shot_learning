@@ -137,9 +137,9 @@ class VGG11(object):
         
         #5th Layer: Full connecteds
         flattened = tf.reshape(pool4, [-1, num_elems])
-        fc7 = fc(flattened, num_elems, 4096, name='fc7')
+        fc7 = fc(flattened, num_elems, 96, name='fc7')
         dropout8 = dropout(fc7, self.KEEP_PROB)
-        fc8 = fc(dropout8, 4096, 4096, name='fc8')
+        fc8 = fc(dropout8, 96, 96, name='fc8')
         dropout9 = dropout(fc8, self.KEEP_PROB)
 
-        self.fc9 = fc(dropout9, 4096, self.NUM_CLASSES, relu = False, name = 'fc9')
+        self.fc9 = fc(dropout9, 96, self.NUM_CLASSES, relu = False, name = 'fc9')
