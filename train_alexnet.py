@@ -82,6 +82,8 @@ with tf.name_scope('train'):
 with tf.name_scope('accuracy'):
     correct_pred = tf.equal(tf.argmax(score, 1), tf.argmax(y, 1))
     accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
+    in_k = tf.cast(tf.nn.in_top_k(score, tf.argmax(y,1), 3), tf.float32)
+    accuracy_k = tf.reduce_mean(in_k)
 
 # Initialize an saver for store model checkpoints
 saver = tf.train.Saver()
@@ -97,7 +99,7 @@ with tf.Session() as sess:
   sess.run(tf.global_variables_initializer())
 
   # Load the pretrained weights into the non-trainable layer
-  saver.restore(sess, 'checkpoints_old2/model_epoch42.ckpt')
+  #saver.restore(sess, 'checkpoints_old2/model_epoch42.ckpt')
 
   print_in_file("{} Start training...".format(datetime.now()))
   print_in_file("{} Open Tensorboard at --logdir {}".format(datetime.now(),
@@ -120,14 +122,23 @@ with tf.Session() as sess:
     # Validate the model on the entire validation set
     print_in_file("{} Start validation".format(datetime.now()))
     test_acc = 0.
+    test_acc_k = 0.
+    
     test_count = 0
     for batch_tx, batch_ty in val_generator:
         acc = sess.run(accuracy, feed_dict={x: batch_tx,
                                                 y: batch_ty})
+        acc_k = sess.run(accuracy_k, feed_dict={x: batch_tx,
+                                                y: batch_ty})
+        
         test_acc += acc
+        test_acc_k += acc_k
         test_count += 1
     test_acc /= test_count
+    test_acc_k /= test_count
+    
     print_in_file("Validation Accuracy = %s %.4f" % (datetime.now(), test_acc))
+    print_in_file("Validation Accuracy (k-top) = %s %.4f" % (datetime.now(), test_acc_k))
 
     # Reset the file pointer of the image data generator
     train_generator = get_batches(target_train_data, batch_size, IMAGE_SIZE)
