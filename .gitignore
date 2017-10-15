@@ -9,4 +9,4 @@ word2vec_dump
 cifar100_*/
 checkpoints*/
 glove.6B/
-train_output.txt
+train_output*.txt
