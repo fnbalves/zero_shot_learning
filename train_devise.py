@@ -8,7 +8,7 @@ from datetime import datetime
 from models import Devise
 from batch_making import *
 
-initial_learning_rate = 0.01
+initial_learning_rate = 0.1
 momentum = 0.9
 num_epochs = 300
 batch_size = 128
@@ -16,7 +16,7 @@ batch_size = 128
 dropout_rate = 0.5
 num_classes = 60
 word2vec_size = 100
-train_layers = ['conv1', 'conv2', 'proj']
+train_layers = ['conv1', 'conv2', 'fc3', 'fc4', 'proj']
 
 display_step = 1
 
@@ -25,12 +25,15 @@ checkpoint_path = 'checkpoints_devise/'
 
 IMAGE_SIZE = 24
 OUTPUT_FILE_NAME = 'train_output_devise.txt'
+LOSS_MARGIN = 100
 
 decay_steps = int(len(target_train_data)/batch_size)
 learning_rate_decay_factor = 0.95
 
 if not os.path.isdir(filewriter_path): os.mkdir(filewriter_path)
 if not os.path.isdir(checkpoint_path): os.mkdir(checkpoint_path)
+
+all_labels = pickle.load(open('pickle_files/all_labels.pickle', 'rb'))
 
 x = tf.placeholder(tf.float32, [batch_size, IMAGE_SIZE, IMAGE_SIZE, 3])
 y = tf.placeholder(tf.float32, [None, word2vec_size])
@@ -62,9 +65,26 @@ def print_in_file(string):
     print(string)
     output_file.close()
 
+def build_all_labels_repr():
+      all_repr = []
+      for label in all_labels:
+            wv = find_word_vec(normalize_label(label))
+            all_repr.append(wv)
+      return tf.constant(np.array(all_repr), shape=[len(all_labels), word2vec_size], dtype=tf.float32)
+
+def build_loss(model_output, target_labels):
+      R = build_all_labels_repr()
+      proj1 = tf.diag_part(tf.matmul(model_output, tf.transpose(target_labels)))
+      sum1 = LOSS_MARGIN - proj1
+      sum2 = tf.matmul(model_output, tf.transpose(R))
+      sum3 = tf.transpose(sum1 + tf.transpose(sum2))
+      mean = tf.reduce_mean(sum3)
+      return mean
+
 with tf.name_scope("loss"):
-    loss = tf.reduce_sum(tf.pow(model_output-y, 2))/(2*batch_size)
-   
+    #loss = tf.reduce_sum(tf.pow(model_output-y, 2))/(2*batch_size)
+      loss = build_loss(model_output, y)
+
 with tf.name_scope('train'):
     gradients = tf.gradients(loss, var_list)
     gradients = list(zip(gradients, var_list))
