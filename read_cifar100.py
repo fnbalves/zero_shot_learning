@@ -114,6 +114,7 @@ if __name__ == '__main__':
     out_target_test = open('pickle_files/target_test_data.pickle', 'wb')
     out_not_target_train = open('pickle_files/not_target_train_data.pickle', 'wb')
     out_not_target_test = open('pickle_files/not_target_test_data.pickle', 'wb')
+    out_all_labels = open('pickle_files/all_labels.pickle', 'wb')
     
     out_vectorizer = open('pickle_files/vectorizer.pickle', 'wb')
     
@@ -122,11 +123,13 @@ if __name__ == '__main__':
     pickle.dump(str_not_target_train_data, out_not_target_train)
     pickle.dump(str_not_target_test_data, out_not_target_test)
     pickle.dump(vectorizer, out_vectorizer)
+    pickle.dump(all_labels_str, out_all_labels)
     
     out_target_train.close()
     out_target_test.close()
     out_not_target_train.close()
     out_not_target_test.close()
-    
     out_vectorizer.close()
+    out_all_labels.close()
+    
     print('DONE!')
