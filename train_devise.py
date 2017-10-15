@@ -78,7 +78,8 @@ def build_loss(model_output, target_labels):
       sum1 = LOSS_MARGIN - proj1
       sum2 = tf.matmul(model_output, tf.transpose(R))
       sum3 = tf.transpose(sum1 + tf.transpose(sum2))
-      mean = tf.reduce_mean(sum3)
+      relu_sum3 = tf.nn.relu(sum3)
+      mean = tf.reduce_mean(relu_sum3)
       return mean
 
 with tf.name_scope("loss"):
