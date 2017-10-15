@@ -152,6 +152,6 @@ class VGG11(object):
         flattened_shape = np.prod([s.value for s in pool5.get_shape()[1:]])
         flattened = tf.reshape(pool5, [-1, flattened_shape], name='flatenned')
 
-        fc6 = fc(flattened, flatenned_shape, 4096, name='fc6')
+        fc6 = fc(flattened, flattened_shape, 4096, name='fc6')
         fc7 = fc(fc6, 4096, 4096, name='fc7')
         self.fc8 = fc(fc7, 4096, self.NUM_CLASSES, relu = False, name = 'fc8')
