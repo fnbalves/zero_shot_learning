@@ -15,30 +15,24 @@ def read_pickle_file(filename):
         p = u.load()
     return p
 
-def separate_target_data(cifar_dict, correspondence_table):
+def separate_target_data(cifar_dict, used_labels):
     #FORMAT: DATA, FINE_LABEL, COARSE_LABEL
     target_data = []
     not_target_data = []
     
     len_data = len(cifar_dict['data'])
-    used_labels = []
     
     for i in range(len_data):
         new_entry = [cifar_dict['data'][i], cifar_dict['fine_labels'][i],
                      cifar_dict['coarse_labels'][i]]
-    
-        coarse = cifar_dict['coarse_labels'][i]
-        fine = cifar_dict['fine_labels'][i]
 
-        table = correspondence_table[coarse]
-        used_labels  = used_labels + table[:3]
-        
-        if fine in table[:3]: #Pick the first three classes for target
+        fine = cifar_dict['fine_labels'][i]
+        if fine in used_labels:
             target_data.append(new_entry)
         else:
             not_target_data.append(new_entry)
 
-    return {'target': target_data, 'not_target': not_target_data, 'used_labels': used_labels}
+    return {'target': target_data, 'not_target': not_target_data}
 
 def create_dataset_with_string_labels(dataset, metadata_dic):
     new_dataset = []
@@ -49,6 +43,32 @@ def create_dataset_with_string_labels(dataset, metadata_dic):
         coarse_name = metadata_dic['coarse_label_names'][coarse_label]
         new_dataset.append([d[0], fine_name, coarse_name])
     return new_dataset
+
+def build_coarse_to_fine_correspondence(cifar_dict):
+    num_coarse = len(set(cifar_dict['coarse_labels']))
+    corrs_coarse_fine = []
+    for i in range(num_coarse):
+        corrs_coarse_fine.append([])
+        
+    len_dict = len(cifar_dict['data'])
+
+    for i in range(len_dict):
+        coarse = cifar_dict['coarse_labels'][i]
+        fine = cifar_dict['fine_labels'][i]
+        if fine not in corrs_coarse_fine[coarse]:
+            corrs_coarse_fine[coarse].append(fine)
+
+    return corrs_coarse_fine
+
+def separated_used_labels(coarse_to_fine_correspondence):
+    used_labels = []
+    all_labels = []
+
+    for fine_labels in coarse_to_fine_correspondence:
+        used_labels = used_labels + fine_labels[:3] #Pick the first three classes for target
+        all_labels = all_labels + fine_labels
+
+    return [all_labels, used_labels]
 
 #READING CIFAR 100 DATA
 
@@ -61,23 +81,17 @@ if __name__ == '__main__':
 
     print('CALCULATING CORRESPONDENCE')
 
-    num_coarse = len(set(cifar_train_dict['coarse_labels']))
-    corrs_coarse_fine = []
-    for i in range(num_coarse):
-        corrs_coarse_fine.append([])
-        
-    len_dict = len(cifar_train_dict['data'])
-
-    for i in range(len_dict):
-        coarse = cifar_train_dict['coarse_labels'][i]
-        fine = cifar_train_dict['fine_labels'][i]
-        if fine not in corrs_coarse_fine[coarse]:
-            corrs_coarse_fine[coarse].append(fine)
-
+    corrs_coarse_fine = build_coarse_to_fine_correspondence(cifar_train_dict)
+    [all_labels, used_labels] = separated_used_labels(corrs_coarse_fine)
+    used_labels_str = [cifar_meta['fine_label_names'][L] for L in used_labels]
+    all_labels_str = [cifar_meta['fine_label_names'][L] for L in all_labels]
+    print('USED LABELS %d:' % len(used_labels_str), set(used_labels_str))
+    print('ALL LABELS %d' % len(all_labels_str), set(all_labels_str))
+    
     print('CORRESPONDENCE DONE')
 
-    separated_train_data = separate_target_data(cifar_train_dict, corrs_coarse_fine)
-    separated_test_data = separate_target_data(cifar_test_dict, corrs_coarse_fine)
+    separated_train_data = separate_target_data(cifar_train_dict, used_labels)
+    separated_test_data = separate_target_data(cifar_test_dict, used_labels)
     
     target_train_data = separated_train_data['target']
     target_test_data = separated_test_data['target']
@@ -85,8 +99,6 @@ if __name__ == '__main__':
     not_target_train_data = separated_train_data['not_target']
     not_target_test_data = separated_test_data['not_target']
     
-    used_labels = separated_train_data['used_labels']
-    used_labels_str = [cifar_meta['fine_label_names'][L] for L in used_labels]
     vectorizer = LabelBinarizer()
     vectorizer.fit(used_labels_str)
     
