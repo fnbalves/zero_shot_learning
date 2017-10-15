@@ -85,26 +85,38 @@ class AlexNet(object):
     def create(self):
         # 1st Layer: Conv (w ReLu) -> Lrn -> Pool
         normalized_images = normalize_images(self.X)
-        conv1 = conv(normalized_images, 5, 5, 64, 1, 1, padding = 'VALID', name = 'conv1')
-        norm1 = lrn(conv1, 2, 2e-05, 0.75, name = 'norm1')
+        self.conv1 = conv(normalized_images, 5, 5, 64, 1, 1, padding = 'VALID', name = 'conv1')
+        norm1 = lrn(self.conv1, 2, 2e-05, 0.75, name = 'norm1')
         pool1 = max_pool(norm1, 3, 3, 2, 2, padding = 'VALID', name = 'pool1')
 
         # 2nd Layer: Conv (w ReLu) -> Lrn -> Poolwith 2 groups
-        conv2 = conv(pool1, 5, 5, 64, 1, 1, groups = 2, name = 'conv2')
-        norm2 = lrn(conv2, 2, 2e-05, 0.75, name = 'norm2')
+        self.conv2 = conv(pool1, 5, 5, 64, 1, 1, groups = 2, name = 'conv2')
+        norm2 = lrn(self.conv2, 2, 2e-05, 0.75, name = 'norm2')
         pool2 = max_pool(norm2, 3, 3, 2, 2, padding = 'VALID', name ='pool2')
 
         # 3th Layer: Flatten -> FC (w ReLu) -> Dropout
-        flattened = tf.reshape(pool2, [-1, 4*4*64])
-        fc3 = fc(flattened, 4*4*64, 384, name='fc3')
+        self.flattened = tf.reshape(pool2, [-1, 4*4*64])
+        self.fc3 = fc(self.flattened, 4*4*64, 384, name='fc3')
         
         # 4th Layer: FC (w ReLu) -> Dropout
-        fc4 = fc(fc3, 384, 192, name = 'fc4')
+        self.fc4 = fc(self.fc3, 384, 192, name = 'fc4')
         
         # 5th Layer: FC and return unscaled activations
         # (for tf.nn.softmax_cross_entropy_with_logits)
-        self.fc5 = fc(fc4, 192, self.NUM_CLASSES, relu = False, name='fc5')
+        self.fc5 = fc(self.fc4, 192, self.NUM_CLASSES, relu = False, name='fc5')
 
+class Devise(object):
+    def __init__(self, x, num_classes, word2vec_size):
+        self.X = x
+        self.NUM_CLASSES = num_classes
+        self.WORD2VEC_SIZE = word2vec_size
+        self.image_repr_model = AlexNet(self.X, self.NUM_CLASSES)
+        self.create()
+    
+    def create(self):
+        self.image_repr = self.image_repr_model.flattened
+        self.projection_layer = fc(self.image_repr, 4*4*64, self.WORD2VEC_SIZE, name='proj')
+        
 class VGG11(object):
     def __init__(self, x, keep_prob, num_classes):
         self.X = x
