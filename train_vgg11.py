@@ -23,7 +23,7 @@ display_step = 1
 filewriter_path = 'cifar100_vgg_history/'
 checkpoint_path = 'checkpoints_vgg/'
 
-IMAGE_SIZE = 128
+IMAGE_SIZE = 32
 OUTPUT_FILE_NAME = 'train_output_vgg.txt'
 
 decay_steps = int(len(target_train_data)/batch_size)
@@ -73,7 +73,7 @@ with tf.name_scope('train'):
     gradients = list(zip(gradients, var_list))
     global_step = tf.Variable(0)
     
-    learning_rate = lr = tf.train.exponential_decay(initial_learning_rate,
+    learning_rate = tf.train.exponential_decay(initial_learning_rate,
                                   global_step,
                                   decay_steps,
                                   learning_rate_decay_factor,

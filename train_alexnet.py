@@ -70,7 +70,7 @@ with tf.name_scope('train'):
     gradients = list(zip(gradients, var_list))
     global_step = tf.Variable(0)
     
-    learning_rate = lr = tf.train.exponential_decay(initial_learning_rate,
+    learning_rate = tf.train.exponential_decay(initial_learning_rate,
                                   global_step,
                                   decay_steps,
                                   learning_rate_decay_factor,
