@@ -8,7 +8,7 @@ from datetime import datetime
 from models import Devise
 from batch_making import *
 
-initial_learning_rate = 0.1
+initial_learning_rate = 0.01
 momentum = 0.9
 num_epochs = 300
 batch_size = 128
