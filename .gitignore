@@ -6,7 +6,7 @@ word2vec_dump
 *.pyc
 *DS_Store
 .idea
-cifar100_history/
-checkpoints/
+cifar100_*/
+checkpoints*/
 glove.6B/
 train_output.txt
