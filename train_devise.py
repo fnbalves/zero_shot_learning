@@ -70,11 +70,12 @@ with tf.name_scope('train'):
     gradients = list(zip(gradients, var_list))
     global_step = tf.Variable(0)
     
-    learning_rate = lr = tf.train.exponential_decay(initial_learning_rate,
-                                  global_step,
-                                  decay_steps,
-                                  learning_rate_decay_factor,
-                                  staircase=True)
+    learning_rate = initial_learning_rate
+    #tf.train.exponential_decay(initial_learning_rate,
+    #                              global_step,
+    #                              decay_steps,
+    #                              learning_rate_decay_factor,
+    #                              staircase=True)
 
     optimizer = tf.train.MomentumOptimizer(learning_rate, momentum)
     train_op = optimizer.apply_gradients(grads_and_vars=gradients, global_step=global_step)
