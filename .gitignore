@@ -8,4 +8,5 @@ word2vec_dump
 .idea
 cifar100_history/
 checkpoints/
+glove.6B/
 train_output.txt
