@@ -23,7 +23,7 @@ display_step = 1
 filewriter_path = 'cifar100_vgg_history/'
 checkpoint_path = 'checkpoints_vgg/'
 
-IMAGE_SIZE = 32
+IMAGE_SIZE = 224
 OUTPUT_FILE_NAME = 'train_output_vgg.txt'
 
 decay_steps = int(len(target_train_data)/batch_size)
