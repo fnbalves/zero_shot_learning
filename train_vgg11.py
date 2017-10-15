@@ -38,7 +38,7 @@ y = tf.placeholder(tf.float32, [None, num_classes])
 keep_prob = tf.placeholder(tf.float32)
 
 model = VGG11(x, keep_prob, num_classes)
-score = model.fc9
+score = model.fc8
 
 var_list = [v for v in tf.trainable_variables() if v.name.split('/')[0] in train_layers]
 
