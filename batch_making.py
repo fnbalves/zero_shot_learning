@@ -37,7 +37,7 @@ def word2vec_batch(word_batch):
         new_batch.append(wv)
     return new_batch
         
-def get_batches(data, size_batch, image_size, word2vec=False):
+def get_batches(data, size_batch, image_size, word2vec=False, send_raw_str=False):
     random.shuffle(target_train_data)
     len_data = len(data)
     num_batches = math.floor(len_data/size_batch)
@@ -50,5 +50,8 @@ def get_batches(data, size_batch, image_size, word2vec=False):
             Ys = vectorizer.transform(raw_Ys)
         else:
             Ys = word2vec_batch(raw_Ys)
-        
-        yield [Xs, Ys]
+
+        if not send_raw_str:
+            yield [Xs, Ys]
+        else:
+            yield [Xs, Ys, raw_Ys]
