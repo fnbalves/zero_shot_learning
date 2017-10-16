@@ -16,7 +16,7 @@ batch_size = 128
 dropout_rate = 0.5
 num_classes = 60
 word2vec_size = 100
-train_layers = ['conv1', 'conv2', 'fc3', 'fc4', 'proj']
+train_layers = ['proj'] #['conv1', 'conv2', 'fc3', 'fc4', 'proj']
 
 display_step = 1
 
