@@ -4,6 +4,7 @@ import tensorflow as tf
 import numpy as np
 import pickle
 import os
+import matplotlib.pyplot as plt
 from datetime import datetime
 from models import Devise
 from batch_making import *
@@ -44,7 +45,7 @@ with tf.Session() as sess:
   sess.run(tf.global_variables_initializer())
 
   # Load the pretrained weights into the non-trainable layer
-  saver.restore(sess, 'checkpoints_devise/model_epoch23.ckpt')
+  saver.restore(sess, 'checkpoints_devise/model_epoch6.ckpt')
 
   for batch_x, batch_y, batch_labels in test_generator:
       output = sess.run(model_output, {x: batch_x})
@@ -69,3 +70,19 @@ for i, L in enumerate(all_labels):
 print('RUNNING TSNE')
 manifold = TSNE(n_components=2).fit_transform(all_points)
 print('DONE')
+
+output_points = [a for i, a in enumerate(manifold) if 'LABEL' not in points_labels[i]]
+class_points = [[a, points_labels[i]] for i, a in enumerate(manifold) if 'LABEL' in points_labels[i]]
+
+x_output = [a[0] for a in output_points]
+y_output = [a[1] for a in output_points]
+x_class_points = [a[0][0] for a in class_points]
+y_class_points = [a[0][1] for a in class_points]
+l_class_points = [a[1].split('-')[1] for a in class_points]
+
+def make_graph():
+      my_graph = plt.scatter(x_class_points, y_class_points)
+      for i, L in enumerate(l_class_points):
+            plt.annotate(L, xy=(x_class_points[i], y_class_points[i]))
+      return my_graph
+      
