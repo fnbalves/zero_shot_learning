@@ -45,7 +45,7 @@ with tf.Session() as sess:
   sess.run(tf.global_variables_initializer())
 
   # Load the pretrained weights into the non-trainable layer
-  saver.restore(sess, 'checkpoints_devise/model_epoch6.ckpt')
+  saver.restore(sess, 'checkpoints_devise/model_epoch10.ckpt')
 
   for batch_x, batch_y, batch_labels in test_generator:
       output = sess.run(model_output, {x: batch_x})
@@ -85,4 +85,17 @@ def make_graph():
       for i, L in enumerate(l_class_points):
             plt.annotate(L, xy=(x_class_points[i], y_class_points[i]))
       return my_graph
-      
+
+def show_label_points(label):
+      make_graph()
+      wx = [x for i, x in enumerate(x_output) if points_labels[i] == label]
+      wy = [y for i, y in enumerate(y_output) if points_labels[i] == label]
+      plt.scatter(wx, wy, c='red')
+      plt.savefig(os.path.join('images', label + '.png'))
+
+ls = list(set([label for label in points_labels if 'LABEL-' not in label]))
+for label in ls:
+      plt.close()
+      show_label_points(label)
+
+
