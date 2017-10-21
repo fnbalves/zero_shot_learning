@@ -21,6 +21,8 @@ NUM_CHANNELS = 3
 print('LOADING DATA')
 target_train_data = pickle.load(open('pickle_files/target_train_data.pickle', 'rb'))
 target_test_data = pickle.load(open('pickle_files/target_test_data.pickle', 'rb'))
+not_target_train_data = pickle.load(open('pickle_files/not_target_train_data.pickle', 'rb'))
+not_target_test_data = pickle.load(open('pickle_files/not_target_test_data.pickle', 'rb'))
 
 vectorizer = pickle.load(open('pickle_files/vectorizer.pickle', 'rb'))
 print('DATA LOADED')
