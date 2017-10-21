@@ -8,7 +8,7 @@ from datetime import datetime
 from models import Devise
 from batch_making import *
 
-initial_learning_rate = 0.1
+initial_learning_rate = 0.01
 momentum = 0.9
 num_epochs = 300
 batch_size = 128
@@ -25,7 +25,7 @@ checkpoint_path = 'checkpoints_devise/'
 
 IMAGE_SIZE = 24
 OUTPUT_FILE_NAME = 'train_output_devise.txt'
-LOSS_MARGIN = 0.5
+LOSS_MARGIN = 0.1
 
 decay_steps = int(len(target_train_data)/batch_size)
 learning_rate_decay_factor = 0.95
@@ -78,7 +78,7 @@ def build_loss(model_output, target_labels):
       sum1 = LOSS_MARGIN - proj1
       sum2 = tf.matmul(model_output, tf.transpose(R))
       sum3 = tf.transpose(sum1 + tf.transpose(sum2))
-      relu_sum3 = tf.pow(sum3, 2) #tf.nn.relu(sum3)
+      relu_sum3 = tf.nn.relu(sum3)
       mean = tf.reduce_mean(relu_sum3)
       reg_term = tf.norm(tf.reduce_mean(model_output, 0) - tf.reduce_mean(R, 0))
       final_loss = mean + 0.2*reg_term
@@ -120,6 +120,7 @@ with tf.Session() as sess:
   sess.run(tf.global_variables_initializer())
 
   # Load the pretrained weights into the non-trainable layer
+  saver.restore(sess, 'checkpoints_devise/model_epoch10.ckpt')
   #previous_loader.restore(sess, 'checkpoints_old2/model_epoch42.ckpt')
 
   print_in_file("{} Start training...".format(datetime.now()))
