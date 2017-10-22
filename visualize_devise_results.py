@@ -80,19 +80,23 @@ x_class_points = [a[0][0] for a in class_points]
 y_class_points = [a[0][1] for a in class_points]
 l_class_points = [a[1].split('-')[1] for a in class_points]
 
-def make_graph():
+def make_graph(attention_label):
       my_graph = plt.scatter(x_class_points, y_class_points)
+      target_point = None
       for i, L in enumerate(l_class_points):
-            plt.annotate(L, xy=(x_class_points[i], y_class_points[i]))
-      return my_graph
+            if L == attention_label:
+                target_point = [[x_class_points[i]], [y_class_points[i]]]
+            plt.annotate(L, xy=(x_class_points[i], y_class_points[i]), size=5)
+      return target_point
 
 def show_label_points(label):
-      make_graph()
+      target_point = make_graph(label)
       wx = [x for i, x in enumerate(x_output) if points_labels[i] == label]
       wy = [y for i, y in enumerate(y_output) if points_labels[i] == label]
       plt.scatter(wx, wy, c='red')
+      plt.scatter(target_point[0], target_point[1], c='green')
       plt.title(label)
-      plt.savefig(os.path.join('images', label + '.png'))
+      plt.savefig(os.path.join('images', label + '.png'), format='png', dpi=1000)
 
 ls = list(set([label for label in points_labels if 'LABEL-' not in label]))
 for label in ls:
