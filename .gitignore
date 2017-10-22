@@ -10,3 +10,4 @@ cifar100_*/
 checkpoints*/
 glove.6B/
 train_output*.txt
+images_old/
