@@ -19,8 +19,10 @@ def conv(x, filter_height, filter_width, num_filters, stride_y, stride_x, name,
                                           padding = padding)
 
     with tf.variable_scope(name) as scope:
-        weights = tf.get_variable('weights', shape = [filter_height, filter_width, input_channels/groups, num_filters], trainable=True)
-        biases = tf.get_variable('biases',shape=[num_filters], trainable=True)
+        weights = tf.get_variable('weights', shape = [filter_height, filter_width, input_channels/groups, num_filters], trainable=True,
+                                  initializer=tf.contrib.layers.xavier_initializer())
+        biases = tf.get_variable('biases',shape=[num_filters], trainable=True,
+                                 initializer=tf.contrib.layers.xavier_initializer())
 
         if groups == 1:
             conv = convolve(x, weights)
@@ -39,8 +41,10 @@ def conv(x, filter_height, filter_width, num_filters, stride_y, stride_x, name,
 #Full connected layer
 def fc(x, num_in, num_out, name, relu=True):
     with tf.variable_scope(name) as scope:
-        weights = tf.get_variable('weights', shape=[num_in, num_out], trainable=True)
-        biases = tf.get_variable('biases', [num_out], trainable=True)
+        weights = tf.get_variable('weights', shape=[num_in, num_out], trainable=True,
+                                  initializer=tf.contrib.layers.xavier_initializer())
+        biases = tf.get_variable('biases', [num_out], trainable=True,
+                                 initializer=tf.contrib.layers.xavier_initializer())
 
         act = tf.nn.xw_plus_b(x, weights, biases, name=scope.name)
 
@@ -114,8 +118,8 @@ class Devise(object):
         self.create()
     
     def create(self):
-        self.image_repr = self.image_repr_model.fc4/33.6543623949
-        self.projection_layer = fc(self.image_repr, 192, self.WORD2VEC_SIZE, name='proj', relu = False)
+        self.image_repr = self.image_repr_model.flattened #self.image_repr_model.fc4 #self.image_repr_model.fc4/33.6543623949
+        self.projection_layer = fc(self.image_repr, 4*4*64, self.WORD2VEC_SIZE, name='proj', relu = False)
         
 class VGG11(object):
     def __init__(self, x, keep_prob, num_classes):
@@ -139,18 +143,19 @@ class VGG11(object):
         conv3_2 = conv(conv3_1, 3, 3, 256, 1, 1, padding = 'VALID', name = 'conv3_2')
         pool3 = max_pool(conv3_2, 2, 2, 2, 2, padding = 'VALID', name = 'pool3')
 
-        conv4_1 = conv(pool3, 3, 3, 512, 1, 1, padding = 'VALID', name = 'conv4_1')
-        conv4_2 = conv(conv4_1, 3, 3, 512, 1, 1, padding = 'VALID', name = 'conv4_2')
-        conv4_3 = conv(conv4_2, 3, 3, 512, 1, 1, padding = 'VALID', name = 'conv4_3')
-        pool4 = max_pool(conv4_3, 2, 2, 2, 2, padding = 'VALID', name = 'pool4')
+        #conv4_1 = conv(pool3, 3, 3, 512, 1, 1, padding = 'VALID', name = 'conv4_1')
+        #conv4_2 = conv(conv4_1, 3, 3, 512, 1, 1, padding = 'VALID', name = 'conv4_2')
+        #conv4_3 = conv(conv4_2, 3, 3, 512, 1, 1, padding = 'VALID', name = 'conv4_3')
+        #pool4 = max_pool(conv4_3, 2, 2, 2, 2, padding = 'VALID', name = 'pool4')
 
-        conv5_1 = conv(pool4, 3, 3, 512, 1, 1, padding = 'VALID', name = 'conv5_1')
-        conv5_2 = conv(conv5_1, 3, 3, 512, 1, 1, padding = 'VALID', name = 'conv5_2')
-        conv5_3 = conv(conv5_2, 3, 3, 512, 1, 1, padding = 'VALID', name = 'conv5_3')
-        pool5 = max_pool(conv5_3, 2, 2, 2, 2, padding = 'VALID', name = 'pool5')
+        #conv5_1 = conv(pool4, 3, 3, 512, 1, 1, padding = 'VALID', name = 'conv5_1')
+        #conv5_2 = conv(conv5_1, 3, 3, 512, 1, 1, padding = 'VALID', name = 'conv5_2')
+        #conv5_3 = conv(conv5_2, 3, 3, 512, 1, 1, padding = 'VALID', name = 'conv5_3')
+        #pool5 = max_pool(conv5_3, 2, 2, 2, 2, padding = 'VALID', name = 'pool5')
 
-        flattened_shape = np.prod([s.value for s in pool5.get_shape()[1:]])
-        flattened = tf.reshape(pool5, [-1, flattened_shape], name='flatenned')
+        flattened_shape = np.prod([s.value for s in pool3.get_shape()[1:]])
+        print('FLATTENED SHAPE', flattened_shape)
+        flattened = tf.reshape(pool3, [-1, flattened_shape], name='flatenned')
 
         fc6 = fc(flattened, flattened_shape, 4096, name='fc6')
         fc7 = fc(fc6, 4096, 4096, name='fc7')
