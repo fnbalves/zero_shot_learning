@@ -25,7 +25,7 @@ checkpoint_path = 'checkpoints_devise/'
 
 IMAGE_SIZE = 24
 OUTPUT_FILE_NAME = 'train_output_devise.txt'
-LOSS_MARGIN = 0.1
+LOSS_MARGIN = 0.1 #1
 
 decay_steps = int(len(target_train_data)/batch_size)
 learning_rate_decay_factor = 0.95
@@ -36,7 +36,7 @@ if not os.path.isdir(checkpoint_path): os.mkdir(checkpoint_path)
 all_labels = pickle.load(open('pickle_files/all_labels.pickle', 'rb'))
 
 x = tf.placeholder(tf.float32, [batch_size, IMAGE_SIZE, IMAGE_SIZE, 3])
-y = tf.placeholder(tf.float32, [None, word2vec_size])
+y = tf.placeholder(tf.float32, [batch_size, word2vec_size])
 
 model = Devise(x, num_classes, word2vec_size)
 model_output = model.projection_layer
@@ -72,17 +72,35 @@ def build_all_labels_repr():
             all_repr.append(wv)
       return tf.constant(np.array(all_repr), shape=[len(all_labels), word2vec_size], dtype=tf.float32)
 
+def build_relevance_weights(target_labels, R):
+      t_splits = tf.split(target_labels, batch_size, axis=0)
+      R_splits = tf.split(R, len(all_labels), axis=0)
+      diffs = []
+      for t in t_splits:
+            new_diff_array = []
+            for r in R_splits:
+                  new_norm = tf.norm(t - r)
+                  new_diff_array.append(new_norm)
+            diffs.append(new_diff_array)
+      diff_tensor = tf.convert_to_tensor(diffs)
+      return diff_tensor
+      
 def build_loss(model_output, target_labels):
       R = build_all_labels_repr()
       proj1 = tf.diag_part(tf.matmul(model_output, tf.transpose(target_labels)))
-      sum1 = LOSS_MARGIN - proj1
+      sum1 =  (-1)*proj1 #LOSS_MARGIN - proj1
+      relevance_weights = build_relevance_weights(target_labels, R)
+      
       sum2 = tf.matmul(model_output, tf.transpose(R))
-      sum3 = tf.transpose(sum1 + tf.transpose(sum2))
-      relu_sum3 = tf.nn.relu(sum3)
+      weighted_sum2 = tf.multiply(sum2, relevance_weights)
+      sum3 = tf.transpose(sum1 + tf.transpose(weighted_sum2))
+      relu_sum3 = sum3 #tf.nn.relu(sum3)
       mean = tf.reduce_mean(relu_sum3)
       reg_term = tf.norm(tf.reduce_mean(model_output, 0) - tf.reduce_mean(R, 0))
-      final_loss = mean + 0.2*reg_term
+      reg_term2 = tf.pow(tf.reduce_mean(tf.norm(model_output, axis=1)) - tf.reduce_mean(tf.norm(R, axis=1)) ,2)
+      final_loss = mean + 0.2*reg_term + 0.8*reg_term2
       return final_loss
+
 
 with tf.name_scope("loss"):
     #loss = tf.reduce_sum(tf.pow(model_output-y, 2))/(2*batch_size)
@@ -120,7 +138,7 @@ with tf.Session() as sess:
   sess.run(tf.global_variables_initializer())
 
   # Load the pretrained weights into the non-trainable layer
-  saver.restore(sess, 'checkpoints_devise/model_epoch10.ckpt')
+  #saver.restore(sess, 'checkpoints_devise/model_epoch10.ckpt')
   #previous_loader.restore(sess, 'checkpoints_old2/model_epoch42.ckpt')
 
   print_in_file("{} Start training...".format(datetime.now()))
