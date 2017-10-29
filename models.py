@@ -118,8 +118,8 @@ class Devise(object):
         self.create()
     
     def create(self):
-        self.image_repr = self.image_repr_model.flattened #self.image_repr_model.fc4 #self.image_repr_model.fc4/33.6543623949
-        self.projection_layer = fc(self.image_repr, 4*4*64, self.WORD2VEC_SIZE, name='proj', relu = False)
+        self.image_repr = self.image_repr_model.fc4 #self.image_repr_model.fc4/33.6543623949
+        self.projection_layer = fc(self.image_repr, 192, self.WORD2VEC_SIZE, name='proj', relu = False)
         
 class VGG11(object):
     def __init__(self, x, keep_prob, num_classes):
