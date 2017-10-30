@@ -3,7 +3,6 @@
 import tensorflow as tf
 import numpy as np
 
-
 #Convolution function that can be split in multiple GPUS
 def conv(x, filter_height, filter_width, num_filters, stride_y, stride_x, name,
              padding='SAME', groups=1, verbose_shapes=False):
@@ -71,7 +70,7 @@ def lrn(x, radius, alpha, beta, name, bias=1.0, verbose_shapes=False):
 
 def normalize_images(x):
     return tf.map_fn(lambda frame: tf.image.per_image_standardization(frame), x)
-    
+
 #Dropout layer
 def dropout(x, keep_prob):
     return tf.nn.dropout(x, keep_prob)
@@ -97,10 +96,10 @@ class AlexNet(object):
         # 3th Layer: Flatten -> FC (w ReLu) -> Dropout
         self.flattened = tf.reshape(pool2, [-1, 4*4*64])
         self.fc3 = fc(self.flattened, 4*4*64, 384, name='fc3')
-        
+
         # 4th Layer: FC (w ReLu) -> Dropout
         self.fc4 = fc(self.fc3, 384, 192, name = 'fc4')
-        
+
         # 5th Layer: FC and return unscaled activations
         # (for tf.nn.softmax_cross_entropy_with_logits)
         self.fc5 = fc(self.fc4, 192, self.NUM_CLASSES, relu = False, name='fc5')
@@ -112,11 +111,11 @@ class Devise(object):
         self.WORD2VEC_SIZE = word2vec_size
         self.image_repr_model = AlexNet(self.X, self.NUM_CLASSES)
         self.create()
-    
+
     def create(self):
         self.image_repr = self.image_repr_model.fc4/33.6543623949
         self.projection_layer = fc(self.image_repr, 192, self.WORD2VEC_SIZE, name='proj', relu = False)
-        
+
 class VGG11(object):
     def __init__(self, x, keep_prob, num_classes):
         self.X = x
@@ -148,6 +147,49 @@ class VGG11(object):
         conv5_2 = conv(conv5_1, 3, 3, 512, 1, 1, padding = 'VALID', name = 'conv5_2')
         conv5_3 = conv(conv5_2, 3, 3, 512, 1, 1, padding = 'VALID', name = 'conv5_3')
         pool5 = max_pool(conv5_3, 2, 2, 2, 2, padding = 'VALID', name = 'pool5')
+
+        flattened_shape = np.prod([s.value for s in pool5.get_shape()[1:]])
+        flattened = tf.reshape(pool5, [-1, flattened_shape], name='flatenned')
+
+        fc6 = fc(flattened, flattened_shape, 4096, name='fc6')
+        fc7 = fc(fc6, 4096, 4096, name='fc7')
+        self.fc8 = fc(fc7, 4096, self.NUM_CLASSES, relu = False, name = 'fc8')
+
+class VGG19(object):
+    def __init__(self, x, keep_prob, num_classes):
+        self.X = x
+        self.KEEP_PROB = keep_prob
+        self.NUM_CLASSES = num_classes
+        self.create()
+
+    def create(self):
+        normalized_images = normalize_images(self.X)
+
+        conv1_1 = conv(normalized_images, 3, 3, 64, 1, 1, padding = 'VALID', name = 'conv1_1')
+        conv1_2 = conv(conv1_1, 3, 3, 64, 1, 1, padding = 'VALID', name = 'conv1_2')
+        pool1 = max_pool(conv1_2, 2, 2, 2, 2, padding = 'VALID', name = 'pool1')
+
+        conv2_1 = conv(pool1, 3, 3, 128, 1, 1, padding = 'VALID', name = 'conv2_1')
+        conv2_2 = conv(conv2_1, 3, 3, 128, 1, 1, padding = 'VALID', name = 'conv2_2')
+        pool2 = max_pool(conv2_2, 2, 2, 2, 2, padding = 'VALID', name = 'pool2')
+
+        conv3_1 = conv(pool2, 3, 3, 256, 1, 1, padding = 'VALID', name = 'conv3_1')
+        conv3_2 = conv(conv3_1, 3, 3, 256, 1, 1, padding = 'VALID', name = 'conv3_2')
+        conv3_3 = conv(conv3_2, 3, 3, 256, 1, 1, padding = 'VALID', name = 'conv3_3')
+        conv3_4 = conv(conv3_3, 3, 3, 256, 1, 1, padding = 'VALID', name = 'conv3_4')
+        pool3 = max_pool(conv3_4, 2, 2, 2, 2, padding = 'VALID', name = 'pool3')
+
+        conv4_1 = conv(pool3, 3, 3, 512, 1, 1, padding = 'VALID', name = 'conv4_1')
+        conv4_2 = conv(conv4_1, 3, 3, 512, 1, 1, padding = 'VALID', name = 'conv4_2')
+        conv4_3 = conv(conv4_2, 3, 3, 512, 1, 1, padding = 'VALID', name = 'conv4_3')
+        conv4_4 = conv(conv4_3, 3, 3, 512, 1, 1, padding = 'VALID', name = 'conv4_4')
+        pool4 = max_pool(conv4_4, 2, 2, 2, 2, padding = 'VALID', name = 'pool4')
+
+        conv5_1 = conv(pool4, 3, 3, 512, 1, 1, padding = 'VALID', name = 'conv5_1')
+        conv5_2 = conv(conv5_1, 3, 3, 512, 1, 1, padding = 'VALID', name = 'conv5_2')
+        conv5_3 = conv(conv5_2, 3, 3, 512, 1, 1, padding = 'VALID', name = 'conv5_3')
+        conv5_4 = conv(conv5_3, 3, 3, 512, 1, 1, padding = 'VALID', name = 'conv5_4')
+        pool5 = max_pool(conv5_4, 2, 2, 2, 2, padding = 'VALID', name = 'pool5')
 
         flattened_shape = np.prod([s.value for s in pool5.get_shape()[1:]])
         flattened = tf.reshape(pool5, [-1, flattened_shape], name='flatenned')
