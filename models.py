@@ -3,6 +3,38 @@
 import tensorflow as tf
 import numpy as np
 
+#Convolution function that can be split in multiple GPUS
+def conv_lrn(x, filter_height, filter_width, num_filters, stride_y, stride_x, name,
+             padding='SAME', groups=1, verbose_shapes=False):
+
+    #Get number of input chennels
+    input_channels = int(x.get_shape()[-1])
+
+    if verbose_shapes:
+        print('INPUT_CHANNELS', input_channels)
+        print('X SHAPE conv', x.get_shape())
+
+    convolve = lambda i, k: tf.nn.conv2d(i, k, strides = [1, stride_y, stride_x, 1],
+                                          padding = padding)
+
+    with tf.variable_scope(name) as scope:
+        weights = tf.get_variable('weights', shape = [filter_height, filter_width, input_channels/groups, num_filters], trainable=True)
+        biases = tf.get_variable('biases',shape=[num_filters], trainable=True)
+
+        if groups == 1:
+            conv = convolve(x, weights)
+        else:
+            input_groups = tf.split(axis=3, num_or_size_splits=groups, value=x)
+            weight_groups = tf.split(axis=3, num_or_size_splits=groups, value=weights)
+            output_groups = [convolve(i, k) for i, k in zip(input_groups, weight_groups)]
+
+            conv = tf.concat(axis=3, values=output_groups)
+
+        bias = tf.reshape(tf.nn.bias_add(conv, biases), conv.get_shape().as_list())
+        norm = lrn(bias, 2, 2e-05, 0.75, name = scope.name)
+        relu = tf.nn.relu(norm, name = scope.name)
+
+        return relu
 
 #Convolution function that can be split in multiple GPUS
 def conv(x, filter_height, filter_width, num_filters, stride_y, stride_x, name,
@@ -39,15 +71,18 @@ def conv(x, filter_height, filter_width, num_filters, stride_y, stride_x, name,
         return relu
 
 #Full connected layer
-def fc(x, num_in, num_out, name, relu=True):
+def fc(x, num_in, num_out, name, relu=True, use_biases=True):
     with tf.variable_scope(name) as scope:
         weights = tf.get_variable('weights', shape=[num_in, num_out], trainable=True,
                                   initializer=tf.contrib.layers.xavier_initializer())
-        biases = tf.get_variable('biases', [num_out], trainable=True,
+
+        if use_biases:
+            biases = tf.get_variable('biases', [num_out], trainable=True,
                                  initializer=tf.contrib.layers.xavier_initializer())
-
-        act = tf.nn.xw_plus_b(x, weights, biases, name=scope.name)
-
+            act = tf.nn.xw_plus_b(x, weights, biases, name=scope.name)
+        else:
+            act = tf.matmul(x, weights)
+        
         if relu == True:
             relu = tf.nn.relu(act)
             return relu
@@ -72,6 +107,15 @@ def lrn(x, radius, alpha, beta, name, bias=1.0, verbose_shapes=False):
     return tf.nn.local_response_normalization(x, depth_radius = radius,
                                                   alpha = alpha, beta = beta,
                                                   bias = bias, name = name)
+
+def avg_pool(x, filter_height, filter_width, stride_y, stride_x,
+                name, padding='SAME', verbose_shapes=False):
+    if verbose_shapes:
+        print('X SHAPE avgpool', x.get_shape())
+
+    return tf.nn.avg_pool(x, ksize=[1, filter_height, filter_width, 1],
+                              strides = [1, stride_y, stride_x, 1],
+                              padding = padding, name = name)
 
 def normalize_images(x):
     return tf.map_fn(lambda frame: tf.image.per_image_standardization(frame), x)
@@ -119,7 +163,7 @@ class Devise(object):
     
     def create(self):
         self.image_repr = self.image_repr_model.fc4 #self.image_repr_model.fc4/33.6543623949
-        self.projection_layer = fc(self.image_repr, 192, self.WORD2VEC_SIZE, name='proj', relu = False)
+        self.projection_layer = fc(self.image_repr, 192, self.WORD2VEC_SIZE, name='proj', relu = False, use_biases=True)
         
 class VGG11(object):
     def __init__(self, x, keep_prob, num_classes):
@@ -160,3 +204,60 @@ class VGG11(object):
         fc6 = fc(flattened, flattened_shape, 4096, name='fc6')
         fc7 = fc(fc6, 4096, 4096, name='fc7')
         self.fc8 = fc(fc7, 4096, self.NUM_CLASSES, relu = False, name = 'fc8')
+
+class VGG19(object):
+    def __init__(self, x, keep_prob, num_classes):
+        self.X = x
+        self.KEEP_PROB = keep_prob
+        self.NUM_CLASSES = num_classes
+        self.create()
+
+    def create(self):
+        normalized_images = normalize_images(self.X)
+
+        conv1_1 = conv_lrn(normalized_images, 3, 3, 64, 1, 1, padding = 'SAME', name = 'conv1_1')
+        conv1_2 = conv_lrn(conv1_1, 3, 3, 64, 1, 1, padding = 'SAME', name = 'conv1_2')
+        pool1 = max_pool(conv1_2, 2, 2, 2, 2, padding = 'SAME', name = 'pool1')
+
+        conv2_1 = conv_lrn(pool1, 3, 3, 128, 1, 1, padding = 'SAME', name = 'conv2_1')
+        conv2_2 = conv_lrn(conv2_1, 3, 3, 128, 1, 1, padding = 'SAME', name = 'conv2_2')
+        pool2 = max_pool(conv2_2, 2, 2, 2, 2, padding = 'SAME', name = 'pool2')
+
+        conv3_1 = conv_lrn(pool2, 3, 3, 256, 1, 1, padding = 'SAME', name = 'conv3_1')
+        conv3_2 = conv_lrn(conv3_1, 3, 3, 256, 1, 1, padding = 'SAME', name = 'conv3_2')
+        conv3_3 = conv_lrn(conv3_2, 3, 3, 256, 1, 1, padding = 'SAME', name = 'conv3_3')
+        conv3_4 = conv_lrn(conv3_3, 3, 3, 256, 1, 1, padding = 'SAME', name = 'conv3_4')
+        pool3 = max_pool(conv3_4, 2, 2, 2, 2, padding = 'SAME', name = 'pool3')
+
+        conv4_1 = conv_lrn(pool3, 3, 3, 512, 1, 1, padding = 'SAME', name = 'conv4_1')
+        conv4_2 = conv_lrn(conv4_1, 3, 3, 512, 1, 1, padding = 'SAME', name = 'conv4_2')
+        conv4_3 = conv_lrn(conv4_2, 3, 3, 512, 1, 1, padding = 'SAME', name = 'conv4_3')
+        conv4_4 = conv_lrn(conv4_3, 3, 3, 512, 1, 1, padding = 'SAME', name = 'conv4_4')
+        pool4 = max_pool(conv4_4, 2, 2, 2, 2, padding = 'SAME', name = 'pool4')
+
+        conv5_1 = conv_lrn(pool4, 3, 3, 512, 1, 1, padding = 'SAME', name = 'conv5_1')
+        conv5_2 = conv_lrn(conv5_1, 3, 3, 512, 1, 1, padding = 'SAME', name = 'conv5_2')
+        conv5_3 = conv_lrn(conv5_2, 3, 3, 512, 1, 1, padding = 'SAME', name = 'conv5_3')
+        conv5_4 = conv_lrn(conv5_3, 3, 3, 512, 1, 1, padding = 'SAME', name = 'conv5_4')
+        pool5 = max_pool(conv5_4, 2, 2, 2, 2, padding = 'SAME', name = 'pool5')
+        print(pool5.get_shape())
+
+        # flattened_shape = np.prod([s.value for s in pool5.get_shape()[1:]])
+        # flattened = tf.reshape(pool5, [-1, flattened_shape], name='flatenned')
+
+        # fc6 = fc(flattened, flattened_shape, 4096, name='fc6')
+        # fc7 = fc(fc6, 4096, 4096, name='fc7')
+        # self.fc8 = fc(fc7, 4096, self.NUM_CLASSES, relu = False, name = 'fc8')
+        # conv_avg = conv(pool5, 3, 3, self.NUM_CLASSES, 1, 1, padding = 'SAME', name = 'conv_avg')
+        # print(conv_avg.get_shape())
+
+        avg_pool1 = avg_pool(pool5, 1, 1, 1, 1, padding = 'SAME', name = 'avg_pool1')
+        print(avg_pool1.get_shape())
+        flattened_shape = np.prod([s.value for s in avg_pool1.get_shape()[1:]])
+        flattened = tf.reshape(avg_pool1, [-1, flattened_shape], name='flatenned')
+        print(flattened_shape)
+        print(flattened.get_shape())
+        # # fc6 = fc(flattened, flattened_shape, 4096, name='fc6')
+        # # fc7 = fc(fc6, 4096, 4096, name='fc7')
+        self.fc1 = fc(flattened, flattened_shape, self.NUM_CLASSES, relu = False, name = 'fc1')
+
