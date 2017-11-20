@@ -12,7 +12,7 @@ from sklearn.manifold import TSNE
 
 batch_size = 128
 num_classes = 60
-word2vec_size = 100
+word2vec_size = 200
 
 IMAGE_SIZE = 24
 
@@ -47,7 +47,7 @@ with tf.Session() as sess:
   sess.run(tf.global_variables_initializer())
 
   # Load the pretrained weights into the non-trainable layer
-  saver.restore(sess, 'checkpoints_devise/model_epoch5.ckpt')
+  saver.restore(sess, 'checkpoints_devise/model_epoch86.ckpt')
 
   for batch_x, batch_y, batch_labels in data_generator:
       output = sess.run(model_output, {x: batch_x})
@@ -98,7 +98,7 @@ def show_label_points(label):
       plt.scatter(wx, wy, c='red')
       plt.scatter(target_point[0], target_point[1], c='green')
       plt.title(label)
-      plt.savefig(os.path.join('images_zero_shot', label + '.png'), format='png', dpi=1000)
+      plt.savefig(os.path.join('test_norm_zero_shot', label + '.png'), format='png', dpi=1000)
 
 ls = list(set([label for label in points_labels if 'LABEL-' not in label]))
 for label in ls:
