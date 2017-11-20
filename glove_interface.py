@@ -2,7 +2,7 @@ import pandas as pd
 import csv
 import numpy as np
 
-glove_data_file = 'glove.6B/glove.6B.100d.txt'
+glove_data_file = 'glove.6B/glove.6B.200d.txt'
 
 print('Loading glove model')
 words = pd.read_table(glove_data_file, sep=" ", index_col=0, header=None, quoting=csv.QUOTE_NONE)
