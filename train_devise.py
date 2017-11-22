@@ -23,7 +23,7 @@ display_step = 1
 filewriter_path = 'cifar100_devise_history/'
 checkpoint_path = 'checkpoints_devise/'
 
-IMAGE_SIZE = 24
+IMAGE_SIZE = 32
 OUTPUT_FILE_NAME = 'train_output_devise.txt'
 LOSS_MARGIN = 0.1 #1
 
@@ -143,7 +143,7 @@ def build_prod_loss(model_output, target_labels, use_reg=True):
       reg_relevance = 0.2
       if not use_reg:
             reg_relevance = 0
-      
+
       final_loss = mean + reg_relevance*reg_term
       return final_loss
 
@@ -152,7 +152,7 @@ def build_rel_w_prod_loss(model_output, target_labels, use_reg=True):
       proj1 = tf.diag_part(tf.matmul(model_output, tf.transpose(target_labels)))
       sum1 =  LOSS_MARGIN - proj1
       relevance_weights = build_relevance_weights(target_labels, R)
-      
+
       sum2 = tf.matmul(model_output, tf.transpose(R))
       weighted_sum2 = tf.multiply(sum2, relevance_weights)
       sum3 = tf.transpose(sum1 + tf.transpose(weighted_sum2))
@@ -188,7 +188,7 @@ with tf.name_scope('train'):
     gradients = tf.gradients(loss, var_list)
     gradients = list(zip(gradients, var_list))
     global_step = tf.Variable(0)
-    
+
     learning_rate = initial_learning_rate
     #tf.train.exponential_decay(initial_learning_rate,
     #                              global_step,
@@ -232,7 +232,7 @@ with tf.Session() as sess:
 
         # And run the training op
         new_batch = sess.run(dist_x_batch, feed_dict={initial_x_batch: batch_xs})
-        
+
         sess.run(train_op, feed_dict={x: new_batch,
                                           y: batch_ys})
 
@@ -241,7 +241,7 @@ with tf.Session() as sess:
     print_in_file("{} Start validation".format(datetime.now()))
     test_loss = 0.
     test_count = 0
-    
+
     for batch_tx, batch_ty in val_generator:
         new_loss = sess.run(loss, feed_dict={x: batch_tx,
                                                 y: batch_ty})
@@ -263,7 +263,7 @@ with tf.Session() as sess:
     test_loss /= test_count
 
     print_in_file("Validation Loss = %s %.4f" % (datetime.now(), test_loss))
-    
+
     # Reset the file pointer of the image data generator
     train_generator = get_batches(target_train_data, batch_size, IMAGE_SIZE, word2vec=True)
     val_generator = get_batches(target_test_data, batch_size, IMAGE_SIZE, word2vec=True)
