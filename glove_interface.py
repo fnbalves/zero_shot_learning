@@ -15,11 +15,13 @@ composite_words = {
         'sweet_pepper' : 'pepper',
         'maple_tree' : 'maple',
         'aquarium_fish' : 'fish',
+        'flatfish' : 'fish',
         'willow_tree' : 'willow',
         'pickup_truck' : 'pickup',
         'palm_tree' : 'palm',
         'lawn_mower' : 'mower',
-        'oak_tree' : 'oak'
+        'oak_tree' : 'oak',
+        'streetcar': 'car'
 }
 
 def normalize_label(label):
