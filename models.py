@@ -52,8 +52,10 @@ def conv(x, filter_height, filter_width, num_filters, stride_y, stride_x, name,
                                           padding = padding)
 
     with tf.variable_scope(name) as scope:
-        weights = tf.get_variable('weights', shape = [filter_height, filter_width, input_channels/groups, num_filters], trainable=True)
-        biases = tf.get_variable('biases',shape=[num_filters], trainable=True)
+        weights = tf.get_variable('weights', shape = [filter_height, filter_width, input_channels/groups, num_filters], trainable=True,
+                                  initializer=tf.contrib.layers.xavier_initializer())
+        biases = tf.get_variable('biases',shape=[num_filters], trainable=True,
+                                 initializer=tf.contrib.layers.xavier_initializer())
 
         if groups == 1:
             conv = convolve(x, weights)
@@ -70,13 +72,18 @@ def conv(x, filter_height, filter_width, num_filters, stride_y, stride_x, name,
         return relu
 
 #Full connected layer
-def fc(x, num_in, num_out, name, relu=True):
+def fc(x, num_in, num_out, name, relu=True, use_biases=True):
     with tf.variable_scope(name) as scope:
-        weights = tf.get_variable('weights', shape=[num_in, num_out], initializer= xavier_initializer(), trainable=True)
-        biases = tf.get_variable('biases', [num_out], initializer= xavier_initializer(), trainable=True)
+        weights = tf.get_variable('weights', shape=[num_in, num_out], trainable=True,
+                                  initializer=tf.contrib.layers.xavier_initializer())
 
-        act = tf.nn.xw_plus_b(x, weights, biases, name=scope.name)
-
+        if use_biases:
+            biases = tf.get_variable('biases', [num_out], trainable=True,
+                                 initializer=tf.contrib.layers.xavier_initializer())
+            act = tf.nn.xw_plus_b(x, weights, biases, name=scope.name)
+        else:
+            act = tf.matmul(x, weights)
+        
         if relu == True:
             relu = tf.nn.relu(act)
             return relu
@@ -93,16 +100,6 @@ def max_pool(x, filter_height, filter_width, stride_y, stride_x,
                               strides = [1,stride_y, stride_x, 1],
                               padding = padding, name = name)
 
-#Max pooling layer
-def avg_pool(x, filter_height, filter_width, stride_y, stride_x,
-                name, padding='SAME', verbose_shapes=False):
-    if verbose_shapes:
-        print('X SHAPE avgpool', x.get_shape())
-
-    return tf.nn.avg_pool(x, ksize=[1, filter_height, filter_width, 1],
-                              strides = [1, stride_y, stride_x, 1],
-                              padding = padding, name = name)
-
 #Batch normalization
 def lrn(x, radius, alpha, beta, name, bias=1.0, verbose_shapes=False):
     if verbose_shapes:
@@ -112,9 +109,18 @@ def lrn(x, radius, alpha, beta, name, bias=1.0, verbose_shapes=False):
                                                   alpha = alpha, beta = beta,
                                                   bias = bias, name = name)
 
+def avg_pool(x, filter_height, filter_width, stride_y, stride_x,
+                name, padding='SAME', verbose_shapes=False):
+    if verbose_shapes:
+        print('X SHAPE avgpool', x.get_shape())
+
+    return tf.nn.avg_pool(x, ksize=[1, filter_height, filter_width, 1],
+                              strides = [1, stride_y, stride_x, 1],
+                              padding = padding, name = name)
+
 def normalize_images(x):
     return tf.map_fn(lambda frame: tf.image.per_image_standardization(frame), x)
-
+    
 #Dropout layer
 def dropout(x, keep_prob):
     return tf.nn.dropout(x, keep_prob)
@@ -140,10 +146,10 @@ class AlexNet(object):
         # 3th Layer: Flatten -> FC (w ReLu) -> Dropout
         self.flattened = tf.reshape(pool2, [-1, 4*4*64])
         self.fc3 = fc(self.flattened, 4*4*64, 384, name='fc3')
-
+        
         # 4th Layer: FC (w ReLu) -> Dropout
         self.fc4 = fc(self.fc3, 384, 192, name = 'fc4')
-
+        
         # 5th Layer: FC and return unscaled activations
         # (for tf.nn.softmax_cross_entropy_with_logits)
         self.fc5 = fc(self.fc4, 192, self.NUM_CLASSES, relu = False, name='fc5')
@@ -153,13 +159,13 @@ class Devise(object):
         self.X = x
         self.NUM_CLASSES = num_classes
         self.WORD2VEC_SIZE = word2vec_size
-        self.image_repr_model = VGG19(self.X, 0.5, self.NUM_CLASSES)
+        self.image_repr_model = AlexNet(self.X, self.NUM_CLASSES)
         self.create()
-
+    
     def create(self):
-        self.image_repr = self.image_repr_model.fc1
-        self.projection_layer = fc(self.image_repr, self.NUM_CLASSES, self.WORD2VEC_SIZE, name='proj', relu = False)
-
+        self.image_repr = self.image_repr_model.fc4 #self.image_repr_model.fc4/33.6543623949
+        self.projection_layer = fc(self.image_repr, 192, self.WORD2VEC_SIZE, name='proj', relu = False, use_biases=True)
+        
 class VGG11(object):
     def __init__(self, x, keep_prob, num_classes):
         self.X = x
@@ -227,7 +233,7 @@ class VGG19(object):
         conv4_1 = conv_lrn(pool3, 3, 3, 512, 1, 1, padding = 'SAME', name = 'conv4_1')
         conv4_2 = conv_lrn(conv4_1, 3, 3, 512, 1, 1, padding = 'SAME', name = 'conv4_2')
         conv4_3 = conv_lrn(conv4_2, 3, 3, 512, 1, 1, padding = 'SAME', name = 'conv4_3')
-       	conv4_4 = conv_lrn(conv4_3, 3, 3, 512, 1, 1, padding = 'SAME', name = 'conv4_4')
+        conv4_4 = conv_lrn(conv4_3, 3, 3, 512, 1, 1, padding = 'SAME', name = 'conv4_4')
         pool4 = max_pool(conv4_4, 2, 2, 2, 2, padding = 'SAME', name = 'pool4')
 
         #conv5_1 = conv_lrn(pool4, 3, 3, 512, 1, 1, padding = 'SAME', name = 'conv5_1')
