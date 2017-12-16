@@ -83,7 +83,7 @@ def fc(x, num_in, num_out, name, relu=True, use_biases=True):
             act = tf.nn.xw_plus_b(x, weights, biases, name=scope.name)
         else:
             act = tf.matmul(x, weights)
-        
+
         if relu == True:
             relu = tf.nn.relu(act)
             return relu
@@ -120,7 +120,7 @@ def avg_pool(x, filter_height, filter_width, stride_y, stride_x,
 
 def normalize_images(x):
     return tf.map_fn(lambda frame: tf.image.per_image_standardization(frame), x)
-    
+
 #Dropout layer
 def dropout(x, keep_prob):
     return tf.nn.dropout(x, keep_prob)
@@ -146,10 +146,10 @@ class AlexNet(object):
         # 3th Layer: Flatten -> FC (w ReLu) -> Dropout
         self.flattened = tf.reshape(pool2, [-1, 4*4*64])
         self.fc3 = fc(self.flattened, 4*4*64, 384, name='fc3')
-        
+
         # 4th Layer: FC (w ReLu) -> Dropout
         self.fc4 = fc(self.fc3, 384, 192, name = 'fc4')
-        
+
         # 5th Layer: FC and return unscaled activations
         # (for tf.nn.softmax_cross_entropy_with_logits)
         self.fc5 = fc(self.fc4, 192, self.NUM_CLASSES, relu = False, name='fc5')
@@ -159,13 +159,13 @@ class Devise(object):
         self.X = x
         self.NUM_CLASSES = num_classes
         self.WORD2VEC_SIZE = word2vec_size
-        self.image_repr_model = AlexNet(self.X, self.NUM_CLASSES)
+        self.image_repr_model = VGG19(self.X, 0.5, self.NUM_CLASSES)
         self.create()
-    
+
     def create(self):
-        self.image_repr = self.image_repr_model.fc4 #self.image_repr_model.fc4/33.6543623949
-        self.projection_layer = fc(self.image_repr, 192, self.WORD2VEC_SIZE, name='proj', relu = False, use_biases=True)
-        
+        self.image_repr = self.image_repr_model.fc7
+        self.projection_layer = fc(self.image_repr, 4096, self.WORD2VEC_SIZE, name='proj', relu = False, use_biases=True)
+
 class VGG11(object):
     def __init__(self, x, keep_prob, num_classes):
         self.X = x
@@ -241,7 +241,6 @@ class VGG19(object):
         #conv5_3 = conv_lrn(conv5_2, 3, 3, 512, 1, 1, padding = 'SAME', name = 'conv5_3')
         #conv5_4 = conv_lrn(conv5_3, 3, 3, 512, 1, 1, padding = 'SAME', name = 'conv5_4')
         #pool5 = max_pool(conv5_4, 2, 2, 2, 2, padding = 'SAME', name = 'pool5')
-        #print(pool5.get_shape())
 
         # flattened_shape = np.prod([s.value for s in pool5.get_shape()[1:]])
         # flattened = tf.reshape(pool5, [-1, flattened_shape], name='flatenned')
@@ -253,13 +252,10 @@ class VGG19(object):
         # print(conv_avg.get_shape())
 
         #avg_pool1 = avg_pool(pool2, 1, 1, 1, 1, padding = 'SAME', name = 'avg_pool1')
-        #print(avg_pool1.get_shape())
+
         flattened_shape = np.prod([s.value for s in pool4.get_shape()[1:]])
         flattened = tf.reshape(pool4, [-1, flattened_shape], name='flatenned')
-        print(flattened_shape)
-        print(flattened.get_shape())
-        # # fc6 = fc(flattened, flattened_shape, 4096, name='fc6')
-        # # fc7 = fc(fc6, 4096, 4096, name='fc7')
-        fc_1 = fc(flattened, flattened_shape, 4096, name='fcc')
-        fc_2 = fc(fc_1, 4096, 4096, name='fccc')
-        self.fc1 = fc(fc_2, 4096, self.NUM_CLASSES, relu = False, name = 'fc1')
+
+        fc6 = fc(flattened, flattened_shape, 4096, name='fc6')
+        self.fc7 = fc(fc6, 4096, 4096, name='fc7')
+        self.fc8 = fc(self.fc7, 4096, self.NUM_CLASSES, relu = False, name = 'fc8')

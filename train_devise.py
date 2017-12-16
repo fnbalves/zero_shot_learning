@@ -20,11 +20,11 @@ word2vec_size = 200
 
 display_step = 1
 
-filewriter_path = 'cifar100_devise_history/'
-checkpoint_path = 'checkpoints_devise_cross_ent/'
+filewriter_path = 'checkpoints_devise_vgg19_eucli_term_history/'
+checkpoint_path = 'checkpoints_devise_vgg19_eucli_term_loss/'
 
 IMAGE_SIZE = 24
-OUTPUT_FILE_NAME = 'train_output_cross_ent.txt'
+OUTPUT_FILE_NAME = 'train_output_vgg19_eucli_term_loss.txt'
 LOSS_MARGIN = 0.1 #1
 
 decay_steps = int(len(target_train_data)/batch_size)
@@ -110,13 +110,20 @@ def build_diffs_eucli(model_output, R):
       diff_tensor = tf.convert_to_tensor(diffs)
       return diff_tensor
 
-def build_eucli_loss(model_output, target_labels):
+def build_eucli_loss(model_output, target_labels, use_reg=True):
       R = build_all_labels_repr()
       proj1 = tf.norm(model_output - target_labels)
       proj2 = (-1)*build_diffs_eucli(model_output, R)
       proj_sum = proj1 + proj2
       proj_mean = tf.reduce_mean(proj_sum)
-      final_loss = proj_mean
+
+      reg_term = tf.norm(tf.reduce_mean(model_output, 0) - tf.reduce_mean(R, 0))
+      reg_relevance = 0.2
+
+      if not use_reg:
+            reg_relevance = 0
+      final_loss = proj_mean + reg_relevance * reg_term
+
       return final_loss
 
 def build_cross_ent_loss(model_output, target_labels, use_reg=True):
@@ -146,7 +153,7 @@ def build_prod_loss(model_output, target_labels, use_reg=True):
       reg_relevance = 0.2
       if not use_reg:
             reg_relevance = 0
-      
+
       final_loss = mean + reg_relevance*reg_term
       return final_loss
 
@@ -155,7 +162,7 @@ def build_rel_w_prod_loss(model_output, target_labels, use_reg=True):
       proj1 = tf.diag_part(tf.matmul(model_output, tf.transpose(target_labels)))
       sum1 =  LOSS_MARGIN - proj1
       relevance_weights = build_relevance_weights(target_labels, R)
-      
+
       sum2 = tf.matmul(model_output, tf.transpose(R))
       weighted_sum2 = tf.multiply(sum2, relevance_weights)
       sum3 = tf.transpose(sum1 + tf.transpose(weighted_sum2))
@@ -182,7 +189,7 @@ def build_no_margin_prod_loss(model_output, target_labels):
       return final_loss
 
 def build_loss(model_output, target_labels):
-      return build_cross_ent_loss(model_output, target_labels, use_reg=True)
+      return build_eucli_loss(model_output, target_labels, use_reg=False)
 
 with tf.name_scope("loss"):
     loss = build_loss(model_output, y)
@@ -191,7 +198,7 @@ with tf.name_scope('train'):
     gradients = tf.gradients(loss, var_list)
     gradients = list(zip(gradients, var_list))
     global_step = tf.Variable(0)
-    
+
     learning_rate = initial_learning_rate
     #tf.train.exponential_decay(initial_learning_rate,
     #                              global_step,
@@ -235,7 +242,7 @@ with tf.Session() as sess:
 
         # And run the training op
         new_batch = sess.run(dist_x_batch, feed_dict={initial_x_batch: batch_xs})
-        
+
         sess.run(train_op, feed_dict={x: new_batch,
                                           y: batch_ys})
 
@@ -244,7 +251,7 @@ with tf.Session() as sess:
     print_in_file("{} Start validation".format(datetime.now()))
     test_loss = 0.
     test_count = 0
-    
+
     for batch_tx, batch_ty in val_generator:
         new_loss = sess.run(loss, feed_dict={x: batch_tx,
                                                 y: batch_ty})
@@ -266,7 +273,7 @@ with tf.Session() as sess:
     test_loss /= test_count
 
     print_in_file("Validation Loss = %s %.4f" % (datetime.now(), test_loss))
-    
+
     # Reset the file pointer of the image data generator
     train_generator = get_batches(target_train_data, batch_size, IMAGE_SIZE, word2vec=True)
     val_generator = get_batches(target_test_data, batch_size, IMAGE_SIZE, word2vec=True)
