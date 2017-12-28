@@ -170,46 +170,6 @@ class Reverse_model(object):
         self.L2 = fc(self.L1, (self.IMAGE_SIZE*self.IMAGE_SIZE*3)/2, self.IMAGE_SIZE*self.IMAGE_SIZE*3,  name='L2', relu=False)
         self.final_image = tf.reshape(self.L2, (-1, self.IMAGE_SIZE, self.IMAGE_SIZE, 3))
 
-class VGG11(object):
-    def __init__(self, x, keep_prob, num_classes):
-        self.X = x
-        self.KEEP_PROB = keep_prob
-        self.NUM_CLASSES = num_classes
-        self.create()
-
-    def create(self):
-        normalized_images = normalize_images(self.X)
-
-        conv1_1 = conv(normalized_images, 3, 3, 64, 1, 1, padding = 'VALID', name = 'conv1_1')
-        conv1_2 = conv(conv1_1, 3, 3, 64, 1, 1, padding = 'VALID', name = 'conv1_2')
-        pool1 = max_pool(conv1_2, 2, 2, 2, 2, padding = 'VALID', name = 'pool1')
-
-        conv2_1 = conv(pool1, 3, 3, 128, 1, 1, padding = 'VALID', name = 'conv2_1')
-        conv2_2 = conv(conv2_1, 3, 3, 128, 1, 1, padding = 'VALID', name = 'conv2_2')
-        pool2 = max_pool(conv2_2, 2, 2, 2, 2, padding = 'VALID', name = 'pool2')
-
-        conv3_1 = conv(pool2, 3, 3, 256, 1, 1, padding = 'VALID', name = 'conv3_1')
-        conv3_2 = conv(conv3_1, 3, 3, 256, 1, 1, padding = 'VALID', name = 'conv3_2')
-        pool3 = max_pool(conv3_2, 2, 2, 2, 2, padding = 'VALID', name = 'pool3')
-
-        #conv4_1 = conv(pool3, 3, 3, 512, 1, 1, padding = 'VALID', name = 'conv4_1')
-        #conv4_2 = conv(conv4_1, 3, 3, 512, 1, 1, padding = 'VALID', name = 'conv4_2')
-        #conv4_3 = conv(conv4_2, 3, 3, 512, 1, 1, padding = 'VALID', name = 'conv4_3')
-        #pool4 = max_pool(conv4_3, 2, 2, 2, 2, padding = 'VALID', name = 'pool4')
-
-        #conv5_1 = conv(pool4, 3, 3, 512, 1, 1, padding = 'VALID', name = 'conv5_1')
-        #conv5_2 = conv(conv5_1, 3, 3, 512, 1, 1, padding = 'VALID', name = 'conv5_2')
-        #conv5_3 = conv(conv5_2, 3, 3, 512, 1, 1, padding = 'VALID', name = 'conv5_3')
-        #pool5 = max_pool(conv5_3, 2, 2, 2, 2, padding = 'VALID', name = 'pool5')
-
-        flattened_shape = np.prod([s.value for s in pool3.get_shape()[1:]])
-        print('FLATTENED SHAPE', flattened_shape)
-        flattened = tf.reshape(pool3, [-1, flattened_shape], name='flatenned')
-
-        fc6 = fc(flattened, flattened_shape, 4096, name='fc6')
-        fc7 = fc(fc6, 4096, 4096, name='fc7')
-        self.fc8 = fc(fc7, 4096, self.NUM_CLASSES, relu = False, name = 'fc8')
-
 class VGG19(object):
     def __init__(self, x, keep_prob, num_classes):
         self.X = x
