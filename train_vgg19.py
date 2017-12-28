@@ -37,7 +37,7 @@ keep_prob = tf.placeholder(tf.float32)
 model = VGG19(x, keep_prob, num_classes)
 score = model.fc1
 
-var_list = [v for v in tf.trainable_variables()] # if v.name.split('/')[0] in train_layers]
+var_list = [v for v in tf.trainable_variables()]
 print(var_list)
 
 
