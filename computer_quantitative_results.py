@@ -1,5 +1,3 @@
-#Partialy based on https://kratzert.github.io/2017/02/24/finetuning-alexnet-with-tensorflow.html
-
 import tensorflow as tf
 import numpy as np
 import pickle
@@ -18,7 +16,9 @@ IMAGE_SIZE = 24
 CHECK_POINT_FILES = ['checkpoints_devise_eucli/model_epoch25.ckpt', 'checkpoints_devise_prod_no_reg/model_epoch30.ckpt',
                      'checkpoints_devise_prod/model_epoch29.ckpt', 'checkpoints_devise_rel_w_prod/model_epoch15.ckpt',
                      'checkpoints_devise_cross_ent_no_reg/model_epoch5.ckpt', 'checkpoints_devise_cross_ent/model_epoch12.ckpt']
+
 OUTPUT_FILES = ['eucli', 'prod_no_reg', 'prod', 'rel_w_prod', 'cross_no_reg', 'cross']
+
 OUTPUT_FILES_FOLDER = 'result_pickles_cosine'
 AUTO_COMPUTE = True
 
@@ -45,6 +45,14 @@ classes = {
 '20': ['mower', 'rocket', 'car', 'tank', 'tractor']
 }
 
+not_target_labels = ['baby', 'bear', 'beaver', 'bed', 'beetle', 'bowl', 'bridge',
+                     'bus', 'camel', 'can', 'caterpillar', 'clock', 'couch', 'crab',
+                     'dolphin', 'forest', 'fox', 'hamster', 'house', 'kangaroo', 'lamp',
+                     'lizard', 'man', 'maple', 'mouse', 'mower', 'orange', 'orchid', 'palm',
+                     'pear', 'pickup', 'plain', 'poppy', 'porcupine', 'ray', 'spider', 'tank',
+                     'tiger', 'trout', 'turtle']
+
+
 reverse_dic = {}
 
 for key in classes.keys():
@@ -65,27 +73,28 @@ model_output = model.projection_layer
 saver = tf.train.Saver()
 all_not_target = not_target_train_data + not_target_test_data
 
-def build_all_labels_repr():
-      all_repr = []
-      for label in all_labels:
-            wv = find_word_vec(normalize_label(label))
-            all_repr.append(wv)
-      return tf.constant(np.array(all_repr), shape=[len(all_labels), word2vec_size], dtype=tf.float32)
-
 def cosine_distance(v1, v2):
       return 1 - np.dot(v1, v2)/(np.linalg.norm(v1) * np.linalg.norm(v2))
 
-def get_closest_words(vector):
+def get_closest_words(vector, zero_shot_only=False):
       all_distances = []
-      for label in all_labels:
+      possible_labels = all_labels
+      if zero_shot_only:
+            possible_labels = not_target_labels
+      
+      for label in possible_labels:
             wv = find_word_vec(normalize_label(label))
             all_distances.append([label, np.linalg.norm(vector - wv)])
       sorted_dist = sorted(all_distances, key=lambda x: x[1])
       return [s[0] for s in sorted_dist]
 
-def get_closest_words_cosine(vector):
+def get_closest_words_cosine(vector, zero_shot_only=False):
       all_distances = []
-      for label in all_labels:
+      possible_labels = all_labels
+      if zero_shot_only:
+            possible_labels = not_target_labels
+      
+      for label in possible_labels:
             wv = find_word_vec(normalize_label(label))
             all_distances.append([label, cosine_distance(vector, wv)])
       sorted_dist = sorted(all_distances, key=lambda x: x[1])
@@ -116,7 +125,7 @@ def get_results(check_point_file, output_file):
             for i, o in enumerate(output):
                 label_vec = batch_y[i]
                 new_distance = cosine_distance(label_vec, o) #np.linalg.norm(label_vec - o)
-                closest_words = get_closest_words_cosine(o)[:5]
+                closest_words = get_closest_words_cosine(o, zero_shot_only=False)[:5]
                 correct_label = batch_labels[i]
 
                 most_close = closest_words[0]
