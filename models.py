@@ -190,7 +190,7 @@ class VGG19(object):
 
         conv1_1 = conv(normalized_images, 3, 3, 64, 1, 1, padding = 'SAME', name = 'conv1_1', batch_norm=True)
         conv1_2 = conv(conv1_1, 3, 3, 64, 1, 1, padding = 'SAME', name = 'conv1_2', batch_norm=True)
-        pool1 = max_pool(conv1_2, 2, 2, 2, 2, padding = 'SAME', name = 'pool1', batch_norm=True)
+        pool1 = max_pool(conv1_2, 2, 2, 2, 2, padding = 'SAME', name = 'pool1')
 
         conv2_1 = conv(pool1, 3, 3, 128, 1, 1, padding = 'SAME', name = 'conv2_1', batch_norm=True)
         conv2_2 = conv(conv2_1, 3, 3, 128, 1, 1, padding = 'SAME', name = 'conv2_2', batch_norm=True)
