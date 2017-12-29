@@ -147,16 +147,24 @@ class AlexNet(object):
         self.fc5 = fc(self.fc4, 192, self.NUM_CLASSES, relu = False, name='fc5')
 
 class Composite_model(object):
-    def __init__(self, x, num_classes, word2vec_size):
+    def __init__(self, x, num_classes, word2vec_size, use_vgg=False):
         self.X = x
         self.NUM_CLASSES = num_classes
         self.WORD2VEC_SIZE = word2vec_size
-        self.image_repr_model = AlexNet(self.X, self.NUM_CLASSES)
+        self.use_vgg = use_vgg
+        if self.use_vgg:
+            self.image_repr_model = VGG19(self.X, 0.5, self.NUM_CLASSES)
+        else:
+            self.image_repr_model = AlexNet(self.X, self.NUM_CLASSES)
         self.create()
     
     def create(self):
-        self.image_repr = self.image_repr_model.fc4
-        self.projection_layer = fc(self.image_repr, 192, self.WORD2VEC_SIZE, name='proj', relu = False, use_biases=True)
+        if self.use_vgg:
+            self.image_repr = self.image_repr_model.fc7
+            self.projection_layer = fc(self.image_repr, 4096, self.WORD2VEC_SIZE, name='proj', relu = False, use_biases=True)
+        else:
+            self.image_repr = self.image_repr_model.fc4
+            self.projection_layer = fc(self.image_repr, 192, self.WORD2VEC_SIZE, name='proj', relu = False, use_biases=True)
 
 class Reverse_model(object):
     def __init__(self, x, word2vec_size, image_size):
