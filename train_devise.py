@@ -6,7 +6,7 @@ import pickle
 import math
 import os
 from datetime import datetime
-from models import Devise
+from models import Composite_model
 from batch_making import *
 
 initial_learning_rate = 0.01
@@ -38,7 +38,7 @@ all_labels = pickle.load(open('pickle_files/all_labels.pickle', 'rb'))
 x = tf.placeholder(tf.float32, [batch_size, IMAGE_SIZE, IMAGE_SIZE, 3])
 y = tf.placeholder(tf.float32, [batch_size, word2vec_size])
 
-model = Devise(x, num_classes, word2vec_size)
+model = Composite_model(x, num_classes, word2vec_size)
 model_output = model.projection_layer
 
 var_list = [v for v in tf.trainable_variables()]

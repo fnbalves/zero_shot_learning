@@ -6,7 +6,7 @@ import pickle
 import os
 import matplotlib.pyplot as plt
 from datetime import datetime
-from models import Devise
+from models import Composite_model
 from batch_making import *
 from sklearn.manifold import TSNE
 
@@ -21,7 +21,7 @@ all_labels = pickle.load(open('pickle_files/all_labels.pickle', 'rb'))
 x = tf.placeholder(tf.float32, [batch_size, IMAGE_SIZE, IMAGE_SIZE, 3])
 y = tf.placeholder(tf.float32, [None, word2vec_size])
 
-model = Devise(x, num_classes, word2vec_size)
+model = Composite_model(x, num_classes, word2vec_size)
 model_output = model.projection_layer
 
 saver = tf.train.Saver()
@@ -46,6 +46,7 @@ with tf.Session() as sess:
 
   # Load the pretrained weights into the non-trainable layer
   saver.restore(sess, 'checkpoints_devise/model_epoch5.ckpt')
+
 
   for batch_x, batch_y, batch_labels in test_generator:
       output = sess.run(model_output, {x: batch_x})
@@ -96,7 +97,7 @@ def show_label_points(label):
       plt.scatter(wx, wy, c='red')
       plt.scatter(target_point[0], target_point[1], c='green')
       plt.title(label)
-      plt.savefig(os.path.join('again', label + '.png'), format='png', dpi=1000)
+      plt.savefig(os.path.join('relatorio_cross_ent', label + '.png'), format='png', dpi=1000)
 
 ls = list(set([label for label in points_labels if 'LABEL-' not in label]))
 for label in ls:

@@ -4,7 +4,7 @@ import pickle
 import os
 import matplotlib.pyplot as plt
 from datetime import datetime
-from models import Devise
+from models import Composite_model
 from batch_making import *
 from sklearn.manifold import TSNE
 
@@ -67,7 +67,7 @@ all_labels = pickle.load(open('pickle_files/all_labels.pickle', 'rb'))
 x = tf.placeholder(tf.float32, [batch_size, IMAGE_SIZE, IMAGE_SIZE, 3])
 y = tf.placeholder(tf.float32, [None, word2vec_size])
 
-model = Devise(x, num_classes, word2vec_size)
+model = Composite_model(x, num_classes, word2vec_size)
 model_output = model.projection_layer
 
 saver = tf.train.Saver()

@@ -146,7 +146,7 @@ class AlexNet(object):
         # (for tf.nn.softmax_cross_entropy_with_logits)
         self.fc5 = fc(self.fc4, 192, self.NUM_CLASSES, relu = False, name='fc5')
 
-class Devise(object):
+class Composite_model(object):
     def __init__(self, x, num_classes, word2vec_size):
         self.X = x
         self.NUM_CLASSES = num_classes
@@ -155,7 +155,7 @@ class Devise(object):
         self.create()
     
     def create(self):
-        self.image_repr = self.image_repr_model.fc4 #self.image_repr_model.fc4/33.6543623949
+        self.image_repr = self.image_repr_model.fc4
         self.projection_layer = fc(self.image_repr, 192, self.WORD2VEC_SIZE, name='proj', relu = False, use_biases=True)
 
 class Reverse_model(object):
