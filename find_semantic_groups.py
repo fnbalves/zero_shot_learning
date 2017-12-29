@@ -15,11 +15,13 @@ num_classes = 60
 word2vec_size = 200
 
 IMAGE_SIZE = 24
-CHECK_POINT_FILES = ['checkpoints_devise_eucli/model_epoch25.ckpt', 'checkpoints_devise_prod_no_reg/model_epoch30.ckpt',
-                     'checkpoints_devise_prod/model_epoch29.ckpt', 'checkpoints_devise_rel_w_prod/model_epoch15.ckpt',
-                     'checkpoints_devise_cross_ent_no_reg/model_epoch5.ckpt', 'checkpoints_devise_cross_ent/model_epoch12.ckpt']
-OUTPUT_FILES = ['eucli', 'prod_no_reg', 'prod', 'rel_w_prod', 'cross_no_reg', 'cross']
-OUTPUT_FILES_FOLDER = 'result_pickles_matrices'
+CHECK_POINT_FILES = [] #Change here
+OUTPUT_FILES = [] #Change here
+OUTPUT_FILES_FOLDER = '' #Change here
+
+if len(CHECK_POINT_FILES) == 0 or len(OUTPUT_FILES) == 0 or OUTPUT_FILES_FOLDER=='':
+    print('Please modify the vars: CHECK_POINT_FILES, OUTPUT_FILES and OUTPUT_FILES_FOLDER')
+
 
 AUTO_COMPUTE = True
 
