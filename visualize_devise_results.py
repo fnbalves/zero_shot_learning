@@ -15,6 +15,11 @@ num_classes = 60
 word2vec_size = 200
 
 IMAGE_SIZE = 24
+CHECKPOINT_TO_LOAD = '' #Change here
+FOLDER_TO_SAVE = '' #Change here
+
+if CHECKPOINT_TO_LOAD == '' or FOLDER_TO_SAVE == '':
+    print('Please modify the CHECKPOINT_TO_LOAD and FOLDER_TO_SAVE variables')
 
 all_labels = pickle.load(open('pickle_files/all_labels.pickle', 'rb'))
 
@@ -45,7 +50,7 @@ with tf.Session() as sess:
   sess.run(tf.global_variables_initializer())
 
   # Load the pretrained weights into the non-trainable layer
-  saver.restore(sess, 'checkpoints_devise/model_epoch5.ckpt')
+  saver.restore(sess, CHECKPOINT_TO_LOAD)
 
 
   for batch_x, batch_y, batch_labels in test_generator:
@@ -97,7 +102,7 @@ def show_label_points(label):
       plt.scatter(wx, wy, c='red')
       plt.scatter(target_point[0], target_point[1], c='green')
       plt.title(label)
-      plt.savefig(os.path.join('relatorio_cross_ent', label + '.png'), format='png', dpi=1000)
+      plt.savefig(os.path.join(FOLDER_TO_SAVE, label + '.png'), format='png', dpi=1000)
 
 ls = list(set([label for label in points_labels if 'LABEL-' not in label]))
 for label in ls:
