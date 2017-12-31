@@ -6,12 +6,7 @@ import math
 import random
 import tensorflow as tf
 
-USE_GLOVE = True
-
-if USE_GLOVE:
-    from glove_interface import *
-else:
-    from db_interface import *
+from glove_interface import *
 
 random.seed(0)
 np.random.seed(0)
