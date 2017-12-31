@@ -17,6 +17,8 @@ word2vec_size = 200
 IMAGE_SIZE = 24
 CHECKPOINT_TO_LOAD = '' #Change here
 FOLDER_TO_SAVE = '' #Change here
+KNOWN_CLASSES = False #Change here
+ZERO_SHOT_CLASSES = True #Change here
 
 if CHECKPOINT_TO_LOAD == '' or FOLDER_TO_SAVE == '':
     print('Please modify the CHECKPOINT_TO_LOAD and FOLDER_TO_SAVE variables')
@@ -30,9 +32,17 @@ model = Composite_model(x, num_classes, word2vec_size)
 model_output = model.projection_layer
 
 saver = tf.train.Saver()
-all_not_target = not_target_train_data + not_target_test_data
 
-data_generator = get_batches(all_not_target, batch_size, IMAGE_SIZE, word2vec=True, send_raw_str=True)
+data_to_use = []
+
+if KNOWN_CLASSES:
+    data_to_use += target_test_data
+
+if ZERO_SHOT_CLASSES:
+    all_not_target = not_target_train_data + not_target_test_data
+    data_to_use += all_not_target
+
+data_generator = get_batches(data_to_use, batch_size, IMAGE_SIZE, word2vec=True, send_raw_str=True)
 
 def build_all_labels_repr():
       all_repr = []
