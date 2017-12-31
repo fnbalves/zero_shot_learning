@@ -24,8 +24,8 @@ print('DATA LOADED')
 
 def adjust_data(image_array, image_size):
     image_matrix = image_array_to_image_matrix(image_array)
-    big_image = resize_image_matrix(image_matrix, image_size, image_size)
-    return big_image
+    resized_image = resize_image_matrix(image_matrix, image_size, image_size)
+    return resized_image
 
 def word2vec_batch(word_batch):
     new_batch = []
