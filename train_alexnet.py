@@ -1,5 +1,5 @@
 #Partialy based on https://kratzert.github.io/2017/02/24/finetuning-alexnet-with-tensorflow.html
-
+#Function to train the basic AlexNet model (for testing only)
 import tensorflow as tf
 import numpy as np
 import pickle
@@ -7,6 +7,7 @@ import os
 from datetime import datetime
 from models import AlexNet
 from batch_making import *
+from training_utils import *
 
 initial_learning_rate = 0.1
 momentum = 0.9
@@ -39,27 +40,8 @@ score = model.fc5
 
 var_list = [v for v in tf.trainable_variables() if v.name.split('/')[0] in train_layers]
 
-def distort_image(image):
-      distorted_image = tf.random_crop(image, [IMAGE_SIZE, IMAGE_SIZE, 3])
-      distorted_image = tf.image.random_flip_left_right(distorted_image)
-      distorted_image = tf.image.random_brightness(distorted_image,
-                                               max_delta=63)
-      distorted_image = tf.image.random_contrast(distorted_image,
-                                             lower=0.2, upper=1.8)
-      float_image = tf.image.per_image_standardization(distorted_image)
-      return float_image
-
-def distorted_batch(batch):
-    return tf.map_fn(lambda frame: distort_image(frame), batch)
-
 initial_x_batch = tf.placeholder(tf.float32, [batch_size, IMAGE_SIZE, IMAGE_SIZE, 3])
-dist_x_batch = distorted_batch(initial_x_batch)
-
-def print_in_file(string):
-    output_file = open(OUTPUT_FILE_NAME, 'a')
-    output_file.write(string + '\n')
-    print(string)
-    output_file.close()
+dist_x_batch = distorted_batch(initial_x_batch, IMAGE_SIZE)
 
 with tf.name_scope("cross_ent"):
     loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
@@ -137,17 +119,17 @@ with tf.Session() as sess:
     test_acc /= test_count
     test_acc_k /= test_count
     
-    print_in_file("Validation Accuracy = %s %.4f" % (datetime.now(), test_acc))
+    print_in_file("Validation Accuracy = %s %.4f" % (datetime.now(), test_acc), OUTPUT_FILE_NAME)
     print_in_file("Validation Accuracy (k-top) = %s %.4f" % (datetime.now(), test_acc_k))
 
     # Reset the file pointer of the image data generator
     train_generator = get_batches(target_train_data, batch_size, IMAGE_SIZE)
     val_generator = get_batches(target_test_data, batch_size, IMAGE_SIZE)
 
-    print_in_file("{} Saving checkpoint of model...".format(datetime.now()))
+    print_in_file("{} Saving checkpoint of model...".format(datetime.now()), OUTPUT_FILE_NAME)
 
     #save checkpoint of the model
     checkpoint_name = os.path.join(checkpoint_path, 'model_epoch'+str(epoch)+'.ckpt')
     save_path = saver.save(sess, checkpoint_name)
 
-    print_in_file("{} Model checkpoint saved at {}".format(datetime.now(), checkpoint_name))
+    print_in_file("{} Model checkpoint saved at {}".format(datetime.now(), checkpoint_name), OUTPUT_FILE_NAME)

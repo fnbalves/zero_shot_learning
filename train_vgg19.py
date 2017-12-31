@@ -1,5 +1,5 @@
 #Partialy based on https://kratzert.github.io/2017/02/24/finetuning-alexnet-with-tensorflow.html
-
+#Function to train the basic VGG19 model (For testing only)
 import tensorflow as tf
 import numpy as np
 import pickle
@@ -7,6 +7,7 @@ import os
 from datetime import datetime
 from models import VGG19
 from batch_making import *
+from training_utils import *
 
 initial_learning_rate = 0.001
 momentum = 0
@@ -25,7 +26,6 @@ OUTPUT_FILE_NAME = 'train_output_vgg.txt'
 
 decay_steps = int(len(target_train_data)/batch_size)
 learning_rate_decay_factor = 0.95
-dropout_rate = 0.5
 
 if not os.path.isdir(filewriter_path): os.mkdir(filewriter_path)
 if not os.path.isdir(checkpoint_path): os.mkdir(checkpoint_path)
@@ -35,33 +35,13 @@ y = tf.placeholder(tf.float32, [None, num_classes])
 keep_prob = tf.placeholder(tf.float32)
 
 model = VGG19(x, keep_prob, num_classes)
-score = model.fc1
+score = model.fc8
 
 var_list = [v for v in tf.trainable_variables()]
 print(var_list)
 
-
-def distort_image(image):
-      distorted_image = tf.random_crop(image, [IMAGE_SIZE, IMAGE_SIZE, 3])
-      distorted_image = tf.image.random_flip_left_right(distorted_image)
-      distorted_image = tf.image.random_brightness(distorted_image,
-                                               max_delta=63)
-      distorted_image = tf.image.random_contrast(distorted_image,
-                                             lower=0.2, upper=1.8)
-      float_image = tf.image.per_image_standardization(distorted_image)
-      return float_image
-
-def distorted_batch(batch):
-    return tf.map_fn(lambda frame: distort_image(frame), batch)
-
 initial_x_batch = tf.placeholder(tf.float32, [batch_size, IMAGE_SIZE, IMAGE_SIZE, 3])
-dist_x_batch = distorted_batch(initial_x_batch)
-
-def print_in_file(string):
-    output_file = open(OUTPUT_FILE_NAME, 'a')
-    output_file.write(string + '\n')
-    print(string)
-    output_file.close()
+dist_x_batch = distorted_batch(initial_x_batch, IMAGE_SIZE)
 
 with tf.name_scope("cross_ent"):
     loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
@@ -131,16 +111,16 @@ with tf.Session() as sess:
         test_acc += acc
         test_count += 1
     test_acc /= test_count
-    print_in_file("Validation Accuracy = %s %.4f" % (datetime.now(), test_acc))
+    print_in_file("Validation Accuracy = %s %.4f" % (datetime.now(), test_acc), OUTPUT_FILE_NAME)
 
     # Reset the file pointer of the image data generator
     train_generator = get_batches(target_train_data, batch_size, IMAGE_SIZE)
     val_generator = get_batches(target_test_data, batch_size, IMAGE_SIZE)
 
-    print_in_file("{} Saving checkpoint of model...".format(datetime.now()))
+    print_in_file("{} Saving checkpoint of model...".format(datetime.now()), OUTPUT_FILE_NAME)
 
     #save checkpoint of the model
     checkpoint_name = os.path.join(checkpoint_path, 'model_epoch'+str(epoch)+'.ckpt')
     save_path = saver.save(sess, checkpoint_name)
 
-    print_in_file("{} Model checkpoint saved at {}".format(datetime.now(), checkpoint_name))
+    print_in_file("{} Model checkpoint saved at {}".format(datetime.now(), checkpoint_name), OUTPUT_FILE_NAME)
