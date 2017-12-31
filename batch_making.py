@@ -23,11 +23,13 @@ vectorizer = pickle.load(open('pickle_files/vectorizer.pickle', 'rb'))
 print('DATA LOADED')
 
 def adjust_data(image_array, image_size):
+    """Resize the image to the needs of the model"""
     image_matrix = image_array_to_image_matrix(image_array)
     resized_image = resize_image_matrix(image_matrix, image_size, image_size)
     return resized_image
 
 def word2vec_batch(word_batch):
+    """Takes a word batch and convert it to a dense representation batch"""
     new_batch = []
     for word in word_batch:
         wv = find_word_vec(normalize_label(word))
@@ -35,6 +37,7 @@ def word2vec_batch(word_batch):
     return new_batch
         
 def get_batches(data, size_batch, image_size, word2vec=False, send_raw_str=False):
+    """Takes a batch of pairs (image, word2vec word) and creates data generators from it"""
     random.shuffle(target_train_data)
     len_data = len(data)
     num_batches = math.floor(len_data/size_batch)
